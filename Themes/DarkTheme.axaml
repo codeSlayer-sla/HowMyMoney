@@ -1,0 +1,34 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Style>
+        <!-- Dark Theme Colors -->
+        <Style.Resources>
+            <!-- Backgrounds -->
+            <SolidColorBrush x:Key="DarkBackground">#1E1E1E</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkSecondaryBackground">#252526</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkTertiaryBackground">#2D2D30</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkCardBackground">#2D2D30</SolidColorBrush>
+            
+            <!-- Text Colors -->
+            <SolidColorBrush x:Key="DarkPrimaryText">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkSecondaryText">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkTertiaryText">#999999</SolidColorBrush>
+            
+            <!-- Borders -->
+            <SolidColorBrush x:Key="DarkBorder">#3E3E42</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkBorderHover">#007ACC</SolidColorBrush>
+            
+            <!-- Accent Colors -->
+            <SolidColorBrush x:Key="DarkAccentBlue">#007ACC</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkAccentGreen">#16C60C</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkAccentOrange">#FF6B00</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkAccentPurple">#8B5CF6</SolidColorBrush>
+            
+            <!-- Input Fields -->
+            <SolidColorBrush x:Key="DarkInputBackground">#3C3C3C</SolidColorBrush>
+            <SolidColorBrush x:Key="DarkInputBorder">#6B6B6B</SolidColorBrush>
+        </Style.Resources>
+    </Style>
+    
+</Styles>

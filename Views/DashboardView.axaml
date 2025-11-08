@@ -1,0 +1,1019 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:HowsMyMoney.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             x:Class="HowsMyMoney.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <UserControl.Resources>
+        <vm:ProfitLossColorConverter x:Key="ProfitLossColorConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Animación para cards -->
+        <Style Selector="Border.card">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.card:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.02)"/>
+            <Setter Property="BoxShadow" Value="0 16 32 0 #44000000"/>
+        </Style>
+        
+        <!-- Animación para botones -->
+        <Style Selector="Button.modern">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Button.modern:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.05)"/>
+        </Style>
+        
+        <Style Selector="Button.modern:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+    <ScrollViewer>
+        <StackPanel Spacing="25" Margin="30">
+            <!-- Encabezado y botones de acción -->
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="📊 Dashboard de Inversiones" 
+                              FontSize="32" 
+                              FontWeight="Bold"
+                              Foreground="#FFFFFF"/>
+                    <TextBlock Text="Gestiona y monitorea tus inversiones en tiempo real" 
+                              FontSize="14" 
+                              Foreground="#CCCCCC"
+                              Margin="0,5,0,0"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                       Content="🔄 Actualizar Precios" 
+                       Command="{Binding UpdatePricesCommand}"
+                       Classes="modern"
+                       Margin="0,0,15,0"
+                       Padding="20,14"
+                       FontWeight="Bold"
+                       FontSize="14"
+                       Foreground="White"
+                       CornerRadius="12">
+                    <Button.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#3B82F6" Offset="0"/>
+                            <GradientStop Color="#007ACC" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.Styles>
+                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                            <Setter Property="Background">
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="#2563EB" Offset="0"/>
+                                    <GradientStop Color="#005A9E" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Setter>
+                        </Style>
+                    </Button.Styles>
+                </Button>
+                
+                <Button Grid.Column="2" 
+                       Content="💾 Exportar CSV" 
+                       Command="{Binding ExportToCsvCommand}"
+                       Classes="modern"
+                       Padding="20,14"
+                       FontWeight="Bold"
+                       FontSize="14"
+                       Foreground="White"
+                       CornerRadius="12">
+                    <Button.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#10B981" Offset="0"/>
+                            <GradientStop Color="#059669" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.Styles>
+                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                            <Setter Property="Background">
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="#059669" Offset="0"/>
+                                    <GradientStop Color="#047857" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Setter>
+                        </Style>
+                    </Button.Styles>
+                </Button>
+            </Grid>
+
+            <!-- Tarjetas de resumen con gradientes modernos -->
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="20">
+                <!-- Total Inversiones -->
+                <Border Grid.Column="0" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       BorderBrush="#8B5CF6"
+                       BorderThickness="0"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#8B5CF6" Offset="0"/>
+                            <GradientStop Color="#6D28D9" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="📈" 
+                                  FontSize="32"
+                                  HorizontalAlignment="Left"/>
+                        <TextBlock Text="Total Inversiones" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"/>
+                        <TextBlock Text="{Binding TotalInvestments}" 
+                                  FontSize="40" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="White"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Invertido -->
+                <Border Grid.Column="1" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#3B82F6" Offset="0"/>
+                            <GradientStop Color="#1D4ED8" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="💵" 
+                                  FontSize="32"
+                                  HorizontalAlignment="Left"/>
+                        <TextBlock Text="Total Invertido" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"/>
+                        <TextBlock Text="{Binding TotalInvested, StringFormat='${0:N0}'}" 
+                                  FontSize="36" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="White"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Valor Actual -->
+                <Border Grid.Column="2" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#10B981" Offset="0"/>
+                            <GradientStop Color="#059669" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="�" 
+                                  FontSize="32"
+                                  HorizontalAlignment="Left"/>
+                        <TextBlock Text="Valor Actual" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"/>
+                        <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N0}'}" 
+                                  FontSize="36" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="White"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Ganancia/Pérdida -->
+                <Border Grid.Column="3" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#F59E0B" Offset="0"/>
+                            <GradientStop Color="#D97706" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="�" 
+                                  FontSize="32"
+                                  HorizontalAlignment="Left"/>
+                        <TextBlock Text="Ganancia/Pérdida" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"/>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding TotalProfitLoss, StringFormat='${0:N0}'}" 
+                                      FontSize="36" 
+                                      FontWeight="ExtraBold"
+                                      Foreground="White"/>
+                            <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='+{0:F1}%'}" 
+                                      FontSize="18" 
+                                      FontWeight="Bold"
+                                      Foreground="White"
+                                      Opacity="0.9"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Gráficos -->
+            <Grid ColumnDefinitions="2*,*" ColumnSpacing="20">
+                <!-- Rendimiento Mensual -->
+                <Border Grid.Column="0" 
+                       Background="#2D2D30" 
+                       CornerRadius="12" 
+                       Padding="25"
+                       BoxShadow="0 8 16 0 #22000000"
+                       BorderBrush="#3E3E42"
+                       BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="📈 Rendimiento Mensual" 
+                                  FontSize="18" 
+                                  FontWeight="Bold"
+                                  Foreground="#FFFFFF"
+                                  Margin="0,0,0,20"/>
+                        <lvc:CartesianChart Series="{Binding MonthlyPerformanceSeries}" 
+                                           Height="280"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Distribución por Tipo -->
+                <Border Grid.Column="1" 
+                       Background="#2D2D30" 
+                       CornerRadius="12" 
+                       Padding="25"
+                       BoxShadow="0 8 16 0 #22000000"
+                       BorderBrush="#3E3E42"
+                       BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="🎯 Distribución" 
+                                  FontSize="18" 
+                                  FontWeight="Bold"
+                                  Foreground="#FFFFFF"
+                                  Margin="0,0,0,20"/>
+                        <lvc:PieChart Series="{Binding AssetDistributionSeries}" 
+                                     Height="280"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Resumen de Criptomonedas -->
+            <Border Background="#2D2D30" 
+                   Classes="card"
+                   CornerRadius="16" 
+                   Padding="30"
+                   BoxShadow="0 12 32 0 #44000000"
+                   BorderBrush="#3E3E42"
+                   BorderThickness="1"
+                   IsVisible="{Binding CryptoSummaries.Count}">
+                <StackPanel>
+                    <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,25">
+                        <TextBlock Grid.Column="0"
+                                  Text="💰 Resumen de Criptomonedas" 
+                                  FontSize="22" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="#FFFFFF"/>
+                        <Border Grid.Column="1"
+                               Background="#8B5CF6"
+                               CornerRadius="12"
+                               Padding="8,4"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CryptoSummaries.Count, StringFormat='{}{0} activos'}"
+                                      FontSize="12"
+                                      FontWeight="Bold"
+                                      Foreground="White"/>
+                        </Border>
+                    </Grid>
+                    
+                    <ItemsControl ItemsSource="{Binding CryptoSummaries}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#1E1E1E" 
+                                       Classes="card"
+                                       CornerRadius="12" 
+                                       Padding="24" 
+                                       Margin="0,0,0,12"
+                                       BorderBrush="#3E3E42"
+                                       BorderThickness="1"
+                                       BoxShadow="0 4 12 0 #22000000">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+                                        <!-- Imagen -->
+                                        <Border Grid.Column="0"
+                                               Width="40" 
+                                               Height="40" 
+                                               CornerRadius="20"
+                                               ClipToBounds="True"
+                                               Background="#3C3C3C"
+                                               Margin="0,0,20,0">
+                                            <Image Source="{Binding ImageUrl}" 
+                                                  Stretch="UniformToFill"/>
+                                        </Border>
+                                        
+                                        <!-- Símbolo y Cantidad -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Symbol}" 
+                                                      FontSize="16" 
+                                                      FontWeight="Bold"
+                                                      Foreground="White"/>
+                                            <TextBlock FontSize="12" Foreground="#AAAAAA">
+                                                <Run Text="{Binding TotalQuantity, StringFormat='{}{0:N8}'}"/>
+                                                <Run Text=" unidades"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        
+                                        <!-- Precio Actual -->
+                                        <StackPanel Grid.Column="2" Margin="20,0" VerticalAlignment="Center">
+                                            <TextBlock Text="Precio" FontSize="11" Foreground="#AAAAAA"/>
+                                            <TextBlock Text="{Binding CurrentPrice, StringFormat='${0:N2}'}" 
+                                                      FontSize="14" 
+                                                      FontWeight="Bold"
+                                                      Foreground="#4FC3F7"/>
+                                        </StackPanel>
+                                        
+                                        <!-- Valor Total -->
+                                        <StackPanel Grid.Column="3" Margin="20,0" VerticalAlignment="Center">
+                                            <TextBlock Text="Valor Total" FontSize="11" Foreground="#AAAAAA"/>
+                                            <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
+                                                      FontSize="14" 
+                                                      FontWeight="Bold"
+                                                      Foreground="White"/>
+                                        </StackPanel>
+                                        
+                                        <!-- Ganancia/Pérdida -->
+                                        <Border Grid.Column="4"
+                                               Background="#3E3E42"
+                                               CornerRadius="6"
+                                               Padding="15,8"
+                                               Margin="20,0"
+                                               VerticalAlignment="Center">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                          HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                          FontSize="12" 
+                                                          FontWeight="SemiBold"
+                                                          Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                          HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        
+                                        <!-- Botón Ajustar Earnings -->
+                                        <Button Grid.Column="5"
+                                               Content="📊" 
+                                               Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenAdjustCryptoDialogCommand}"
+                                               CommandParameter="{Binding}"
+                                               Classes="modern"
+                                               Padding="14,10"
+                                               Foreground="White"
+                                               CornerRadius="10"
+                                               FontSize="18"
+                                               VerticalAlignment="Center"
+                                               ToolTip.Tip="Ajustar cantidad por earnings/staking">
+                                            <Button.Background>
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                    <GradientStop Color="#3B82F6" Offset="0"/>
+                                                    <GradientStop Color="#007ACC" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Button.Background>
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                                    <Setter Property="Background">
+                                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                            <GradientStop Color="#2563EB" Offset="0"/>
+                                                            <GradientStop Color="#005A9E" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Inversiones en Criptomonedas -->
+            <Border Background="#2D2D30" 
+                   CornerRadius="12" 
+                   Padding="25"
+                   BoxShadow="0 8 16 0 #22000000"
+                   BorderBrush="#3E3E42"
+                   BorderThickness="1"
+                   IsVisible="{Binding CryptoInvestments.Count}">
+                <StackPanel>
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+                        <TextBlock Grid.Column="0"
+                                  Text="💎 Inversiones en Criptomonedas" 
+                                  FontSize="18" 
+                                  FontWeight="Bold"
+                                  Foreground="#FFFFFF"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding CryptoInvestments.Count, StringFormat='{}{0} inversiones'}"
+                                  FontSize="14"
+                                  Foreground="#AAAAAA"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                    
+                    <!-- Vista de Lista Personalizada -->
+                    <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding CryptoInvestments}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#252526" 
+                                           CornerRadius="8" 
+                                           Padding="20" 
+                                           Margin="0,0,0,12"
+                                           BorderBrush="#3E3E42"
+                                           BorderThickness="1">
+                                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                            
+                                            <!-- Columna 1: Imagen, Nombre y Tipo -->
+                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,30,0">
+                                                <!-- Imagen del activo -->
+                                                <Border Grid.Column="0"
+                                                       Width="50" 
+                                                       Height="50" 
+                                                       CornerRadius="25"
+                                                       ClipToBounds="True"
+                                                       Background="#3C3C3C"
+                                                       Margin="0,0,15,0"
+                                                       VerticalAlignment="Center">
+                                                    <Image Source="{Binding ImageUrl}" 
+                                                          Stretch="UniformToFill"/>
+                                                </Border>
+                                                
+                                                <StackPanel Grid.Column="1" 
+                                                           VerticalAlignment="Center"
+                                                           Width="230">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                              FontSize="16" 
+                                                              FontWeight="Bold"
+                                                              Foreground="White"
+                                                              TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AssetType}" 
+                                                              FontSize="12" 
+                                                              Foreground="#AAAAAA"
+                                                              Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            
+                                            <!-- Columna 2: Cantidad -->
+                                            <StackPanel Grid.Column="1" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="📊 Cantidad" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N4}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="SemiBold"
+                                                          Foreground="White"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Columna 3: Total Invertido -->
+                                            <StackPanel Grid.Column="2" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="� Total Invertido" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding TotalPurchaseValue, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#FFB347"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Columna 4: Valor Actual -->
+                                            <StackPanel Grid.Column="3" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="� Valor Actual" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#4FC3F7"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Columna 5: Ganancia/Pérdida y Porcentaje -->
+                                            <Border Grid.Column="4"
+                                                   Background="#3E3E42"
+                                                   CornerRadius="8"
+                                                   Padding="20,12"
+                                                   Margin="0,0,20,0"
+                                                   VerticalAlignment="Center">
+                                                <StackPanel>
+                                                    <TextBlock Text="📊 Ganancia/Pérdida" 
+                                                              FontSize="11" 
+                                                              Foreground="#AAAAAA"
+                                                              HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
+                                                              FontSize="18" 
+                                                              FontWeight="Bold"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              HorizontalAlignment="Center"
+                                                              Margin="0,4,0,4"/>
+                                                    <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                              FontSize="14" 
+                                                              FontWeight="SemiBold"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            
+                                            <!-- Columna 6: Botón Eliminar -->
+                                            <Button Grid.Column="5"
+                                                   Content="🗑️" 
+                                                   Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
+                                                   CommandParameter="{Binding}"
+                                                   Padding="12,8"
+                                                   Background="#D32F2F"
+                                                   Foreground="White"
+                                                   CornerRadius="6"
+                                                   FontSize="18"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip.Tip="Eliminar inversión">
+                                                <Button.Styles>
+                                                    <Style Selector="Button:pointerover">
+                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                    </Style>
+                                                </Button.Styles>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+
+            <!-- Inversiones en Skins CS:GO -->
+            <Border Background="#2D2D30" 
+                   CornerRadius="12" 
+                   Padding="25"
+                   BoxShadow="0 8 16 0 #22000000"
+                   BorderBrush="#3E3E42"
+                   BorderThickness="1"
+                   IsVisible="{Binding SkinInvestments.Count}">
+                <StackPanel>
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+                        <TextBlock Grid.Column="0"
+                                  Text="🔫 Inversiones en Skins CS:GO" 
+                                  FontSize="18" 
+                                  FontWeight="Bold"
+                                  Foreground="#FFFFFF"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding SkinInvestments.Count, StringFormat='{}{0} inversiones'}"
+                                  FontSize="14"
+                                  Foreground="#AAAAAA"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                    
+                    <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SkinInvestments}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#252526" 
+                                           CornerRadius="8" 
+                                           Padding="20" 
+                                           Margin="0,0,0,12"
+                                           BorderBrush="#3E3E42"
+                                           BorderThickness="1">
+                                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                            
+                                            <!-- Columna 1: Imagen, Nombre y Tipo -->
+                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,30,0">
+                                                <Border Grid.Column="0"
+                                                       Width="50" 
+                                                       Height="50" 
+                                                       CornerRadius="25"
+                                                       ClipToBounds="True"
+                                                       Background="#3C3C3C"
+                                                       Margin="0,0,15,0"
+                                                       VerticalAlignment="Center">
+                                                    <Image Source="{Binding ImageUrl}" 
+                                                          Stretch="UniformToFill"/>
+                                                </Border>
+                                                
+                                                <StackPanel Grid.Column="1" 
+                                                           VerticalAlignment="Center"
+                                                           Width="230">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                              FontSize="16" 
+                                                              FontWeight="Bold"
+                                                              Foreground="White"
+                                                              TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AssetType}" 
+                                                              FontSize="12" 
+                                                              Foreground="#AAAAAA"
+                                                              Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            
+                                            <StackPanel Grid.Column="1" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="📊 Cantidad" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N4}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="SemiBold"
+                                                          Foreground="White"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Grid.Column="2" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="💰 Total Invertido" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding TotalPurchaseValue, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#FFB347"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Grid.Column="3" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="💎 Valor Actual" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#4FC3F7"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <Border Grid.Column="4"
+                                                   Background="#3E3E42"
+                                                   CornerRadius="8"
+                                                   Padding="20,12"
+                                                   Margin="0,0,20,0"
+                                                   VerticalAlignment="Center">
+                                                <StackPanel>
+                                                    <TextBlock Text="📊 Ganancia/Pérdida" 
+                                                              FontSize="11" 
+                                                              Foreground="#AAAAAA"
+                                                              HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
+                                                              FontSize="18" 
+                                                              FontWeight="Bold"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              HorizontalAlignment="Center"
+                                                              Margin="0,4,0,4"/>
+                                                    <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                              FontSize="14" 
+                                                              FontWeight="SemiBold"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            
+                                            <Button Grid.Column="5"
+                                                   Content="🗑️" 
+                                                   Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
+                                                   CommandParameter="{Binding}"
+                                                   Padding="12,8"
+                                                   Background="#D32F2F"
+                                                   Foreground="White"
+                                                   CornerRadius="6"
+                                                   FontSize="18"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip.Tip="Eliminar inversión">
+                                                <Button.Styles>
+                                                    <Style Selector="Button:pointerover">
+                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                    </Style>
+                                                </Button.Styles>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+
+            <!-- Inversiones Manuales -->
+            <Border Background="#2D2D30" 
+                   CornerRadius="12" 
+                   Padding="25"
+                   BoxShadow="0 8 16 0 #22000000"
+                   BorderBrush="#3E3E42"
+                   BorderThickness="1"
+                   IsVisible="{Binding ManualInvestments.Count}">
+                <StackPanel>
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+                        <TextBlock Grid.Column="0"
+                                  Text="📝 Inversiones Manuales" 
+                                  FontSize="18" 
+                                  FontWeight="Bold"
+                                  Foreground="#FFFFFF"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ManualInvestments.Count, StringFormat='{}{0} inversiones'}"
+                                  FontSize="14"
+                                  Foreground="#AAAAAA"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                    
+                    <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ManualInvestments}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#252526" 
+                                           CornerRadius="8" 
+                                           Padding="20" 
+                                           Margin="0,0,0,12"
+                                           BorderBrush="#3E3E42"
+                                           BorderThickness="1">
+                                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                                            
+                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,30,0">
+                                                <Border Grid.Column="0"
+                                                       Width="50" 
+                                                       Height="50" 
+                                                       CornerRadius="25"
+                                                       ClipToBounds="True"
+                                                       Background="#3C3C3C"
+                                                       Margin="0,0,15,0"
+                                                       VerticalAlignment="Center">
+                                                    <Image Source="{Binding ImageUrl}" 
+                                                          Stretch="UniformToFill"/>
+                                                </Border>
+                                                
+                                                <StackPanel Grid.Column="1" 
+                                                           VerticalAlignment="Center"
+                                                           Width="230">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                              FontSize="16" 
+                                                              FontWeight="Bold"
+                                                              Foreground="White"
+                                                              TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AssetType}" 
+                                                              FontSize="12" 
+                                                              Foreground="#AAAAAA"
+                                                              Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            
+                                            <StackPanel Grid.Column="1" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="📊 Cantidad" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N4}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="SemiBold"
+                                                          Foreground="White"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Grid.Column="2" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="💰 Total Invertido" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding TotalPurchaseValue, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#FFB347"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Grid.Column="3" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="💎 Valor Actual" 
+                                                          FontSize="11" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
+                                                          FontSize="15" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#4FC3F7"
+                                                          Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <Border Grid.Column="4"
+                                                   Background="#3E3E42"
+                                                   CornerRadius="8"
+                                                   Padding="20,12"
+                                                   Margin="0,0,20,0"
+                                                   VerticalAlignment="Center">
+                                                <StackPanel>
+                                                    <TextBlock Text="📊 Ganancia/Pérdida" 
+                                                              FontSize="11" 
+                                                              Foreground="#AAAAAA"
+                                                              HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
+                                                              FontSize="18" 
+                                                              FontWeight="Bold"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              HorizontalAlignment="Center"
+                                                              Margin="0,4,0,4"/>
+                                                    <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                              FontSize="14" 
+                                                              FontWeight="SemiBold"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            
+                                            <Button Grid.Column="5"
+                                                   Content="🗑️" 
+                                                   Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
+                                                   CommandParameter="{Binding}"
+                                                   Padding="12,8"
+                                                   Background="#D32F2F"
+                                                   Foreground="White"
+                                                   CornerRadius="6"
+                                                   FontSize="18"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip.Tip="Eliminar inversión">
+                                                <Button.Styles>
+                                                    <Style Selector="Button:pointerover">
+                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                    </Style>
+                                                </Button.Styles>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+
+            <!-- Barra de estado -->
+            <TextBlock Text="{Binding StatusMessage}" 
+                      FontSize="12" 
+                      Foreground="#7F8C8D"
+                      HorizontalAlignment="Right"/>
+        </StackPanel>
+    </ScrollViewer>
+
+    <!-- Diálogo de Ajuste de Criptomoneda -->
+    <Border IsVisible="{Binding IsAdjustmentDialogOpen}"
+            Background="#CC000000"
+            ZIndex="1000">
+        <Border Background="#2D2D30"
+               CornerRadius="12"
+               Padding="30"
+               MaxWidth="500"
+               MaxHeight="400"
+               BorderBrush="#007ACC"
+               BorderThickness="2"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               BoxShadow="0 12 24 0 #88000000">
+            <StackPanel Spacing="20">
+                <!-- Título -->
+                <TextBlock Text="📊 Ajustar Cantidad por Earnings" 
+                          FontSize="22" 
+                          FontWeight="Bold"
+                          Foreground="White"
+                          HorizontalAlignment="Center"/>
+                
+                <!-- Información de la cripto -->
+                <StackPanel Spacing="10" IsVisible="{Binding SelectedCryptoForAdjustment}">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" 
+                                  Text="Criptomoneda:" 
+                                  FontSize="14" 
+                                  Foreground="#AAAAAA"
+                                  Margin="0,0,15,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" 
+                                  Text="{Binding SelectedCryptoForAdjustment.Symbol}" 
+                                  FontSize="14" 
+                                  FontWeight="Bold"
+                                  Foreground="White"
+                                  Margin="0,0,0,5"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" 
+                                  Text="Cantidad actual:" 
+                                  FontSize="14" 
+                                  Foreground="#AAAAAA"
+                                  Margin="0,0,15,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" 
+                                  Text="{Binding SelectedCryptoForAdjustment.TotalQuantity, StringFormat='{}{0:N8} unidades'}" 
+                                  FontSize="14" 
+                                  Foreground="#4FC3F7"
+                                  Margin="0,0,0,5"/>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" 
+                                  Text="Valor actual:" 
+                                  FontSize="14" 
+                                  Foreground="#AAAAAA"
+                                  Margin="0,0,15,0"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" 
+                                  Text="{Binding SelectedCryptoForAdjustment.CurrentValue, StringFormat='${0:N2}'}" 
+                                  FontSize="14" 
+                                  Foreground="#4CAF50"/>
+                    </Grid>
+                </StackPanel>
+                
+                <Border Height="1" Background="#3E3E42"/>
+                
+                <!-- Input de nueva cantidad -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Nueva cantidad total (después de earnings/staking):" 
+                              FontSize="14" 
+                              Foreground="White"/>
+                    <TextBox Text="{Binding NewCryptoQuantity}"
+                            Watermark="Ej: 0.00192500"
+                            FontSize="16"
+                            Padding="12"
+                            Background="#1E1E1E"
+                            Foreground="White"
+                            BorderBrush="#007ACC"
+                            BorderThickness="2"
+                            CornerRadius="6"/>
+                    <TextBlock FontSize="11"
+                              Foreground="#4CAF50"
+                              TextWrapping="Wrap"
+                              Margin="5,5,0,0">
+                        <Run Text="✅ Se creará un nuevo registro marcado como [EARNING]"/>
+                    </TextBlock>
+                    <TextBlock FontSize="11"
+                              Foreground="#FFA726"
+                              TextWrapping="Wrap"
+                              Margin="5,0,0,0">
+                        <Run Text="💡 Tus compras originales NO se modificarán (mantiene trazabilidad)"/>
+                    </TextBlock>
+                </StackPanel>
+                
+                <!-- Botones -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
+                    <Button Grid.Column="0"
+                           Content="❌ Cancelar"
+                           Command="{Binding CloseAdjustCryptoDialogCommand}"
+                           Padding="15,10"
+                           Background="#424242"
+                           Foreground="White"
+                           CornerRadius="6"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Center">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#616161"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                    
+                    <Button Grid.Column="1"
+                           Content="✅ Ajustar"
+                           Command="{Binding AdjustCryptoQuantityCommand}"
+                           Padding="15,10"
+                           Background="#007ACC"
+                           Foreground="White"
+                           CornerRadius="6"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Center">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#005A9E"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Border>
+    </Panel>
+
+</UserControl>

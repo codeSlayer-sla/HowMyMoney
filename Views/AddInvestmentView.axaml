@@ -1,0 +1,439 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:HowsMyMoney.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             x:Class="HowsMyMoney.Views.AddInvestmentView"
+             x:DataType="vm:AddInvestmentViewModel">
+
+    <UserControl.Styles>
+        <!-- Estilo para inputs modernos -->
+        <Style Selector="TextBox">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.input-container">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.input-container:pointerover">
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+        </Style>
+        
+        <Style Selector="Button.modern-btn">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Button.modern-btn:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.05)"/>
+        </Style>
+        
+        <Style Selector="Button.modern-btn:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <Border Background="#2D2D30" 
+               CornerRadius="20" 
+               Padding="45"
+               MaxWidth="750"
+               Margin="30,20"
+               BoxShadow="0 8 32 0 #44000000"
+               BorderBrush="#3E3E42"
+               BorderThickness="1"
+               ClipToBounds="False">
+            <StackPanel Spacing="30">
+                <!-- Header con gradiente -->
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                    <Border Grid.Column="0" Grid.RowSpan="2"
+                           Width="60" Height="60"
+                           CornerRadius="15"
+                           VerticalAlignment="Center"
+                           Margin="0,0,20,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#8B5CF6" Offset="0"/>
+                                <GradientStop Color="#6D28D9" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="➕" 
+                                  FontSize="32"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Grid.Column="1" Grid.Row="0"
+                              Text="Nueva Inversión" 
+                              FontSize="32" 
+                              FontWeight="ExtraBold"
+                              Foreground="#FFFFFF"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1"
+                              Text="Agrega un nuevo activo a tu portfolio y monitorea su rendimiento" 
+                              FontSize="14" 
+                              Foreground="#AAAAAA"
+                              Margin="0,5,0,0"/>
+                </Grid>
+                
+                <!-- Separator con gradiente -->
+                <Border Height="2">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                            <GradientStop Color="#8B5CF6" Offset="0"/>
+                            <GradientStop Color="#3B82F6" Offset="0.5"/>
+                            <GradientStop Color="#10B981" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <!-- Tipo de Activo -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="📊 Tipo de Activo" 
+                              FontWeight="SemiBold" 
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <ComboBox ItemsSource="{Binding AssetTypes}"
+                             SelectedItem="{Binding SelectedAssetType}"
+                             HorizontalAlignment="Stretch"
+                             Padding="12"
+                             FontSize="14"
+                             Background="#3C3C3C"
+                             BorderBrush="#6B6B6B"
+                             BorderThickness="2"
+                             Foreground="#FFFFFF">
+                        <ComboBox.Styles>
+                            <Style Selector="ComboBox:pointerover /template/ Border#Background">
+                                <Setter Property="BorderBrush" Value="#007ACC"/>
+                            </Style>
+                            <Style Selector="ComboBox:focus /template/ Border#Background">
+                                <Setter Property="BorderBrush" Value="#16C60C"/>
+                            </Style>
+                        </ComboBox.Styles>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Nombre y búsqueda -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="💰 Nombre del Activo" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Border Grid.Column="0" 
+                               CornerRadius="8" 
+                               Background="#3C3C3C" 
+                               BorderBrush="#6B6B6B" 
+                               BorderThickness="2"
+                               Padding="2">
+                            <TextBox Text="{Binding Name}"
+                                    Watermark="Ej: Bitcoin, AK-47 | Redline, etc."
+                                    FontSize="14"
+                                    Padding="12"
+                                    BorderThickness="0"
+                                    Background="Transparent"/>
+                        </Border>
+                        <Button Grid.Column="1" 
+                               Content="� Buscar" 
+                               Command="{Binding SearchAssetCommand}"
+                               Margin="12,0,0,0"
+                               Padding="20,12"
+                               FontWeight="SemiBold"
+                               FontSize="14"
+                               Background="#007ACC"
+                               Foreground="White"
+                               CornerRadius="6">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover">
+                                    <Setter Property="Background" Value="#2980B9"/>
+                                </Style>
+                            </Button.Styles>
+                        </Button>
+                    </Grid>
+                    
+                    <!-- Resultados de búsqueda -->
+                    <Border IsVisible="{Binding SearchResults.Count}"
+                           Background="#2D2D30"
+                           BorderThickness="2"
+                           BorderBrush="#007ACC"
+                           CornerRadius="8"
+                           Margin="0,8,0,0"
+                           BoxShadow="0 4 12 0 #22000000">
+                        <ScrollViewer MaxHeight="220">
+                            <ItemsControl ItemsSource="{Binding SearchResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding $parent[UserControl].((vm:AddInvestmentViewModel)DataContext).SelectSearchResultCommand}"
+                                               CommandParameter="{Binding}"
+                                               HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch"
+                                               Background="Transparent"
+                                               BorderThickness="0"
+                                               Padding="12"
+                                               Margin="4"
+                                               CornerRadius="6">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <!-- Imagen del activo -->
+                                                <Border Grid.Column="0" 
+                                                       Width="40" 
+                                                       Height="40" 
+                                                       CornerRadius="20"
+                                                       ClipToBounds="True"
+                                                       Background="#3C3C3C"
+                                                       Margin="0,0,12,0">
+                                                    <Image Source="{Binding ImageUrl}" 
+                                                          Stretch="UniformToFill"/>
+                                                </Border>
+                                                
+                                                <!-- Nombre y símbolo -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                              FontSize="14" 
+                                                              FontWeight="SemiBold"
+                                                              Foreground="White"/>
+                                                    <TextBlock Text="{Binding Symbol}" 
+                                                              FontSize="12" 
+                                                              Foreground="#AAAAAA"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Precio -->
+                                                <TextBlock Grid.Column="2"
+                                                          Text="{Binding CurrentPrice, StringFormat='${0:N2}'}"
+                                                          FontSize="14"
+                                                          FontWeight="Bold"
+                                                          Foreground="#16C60C"
+                                                          VerticalAlignment="Center"/>
+                                            </Grid>
+                                            
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover">
+                                                    <Setter Property="Background" Value="#3C3C3C"/>
+                                                </Style>
+                                                <Style Selector="Button:pressed">
+                                                    <Setter Property="Background" Value="#007ACC"/>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+
+                <!-- Símbolo (para criptos) -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="🔑 Símbolo / ID" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <Border CornerRadius="8" 
+                           Background="#3C3C3C" 
+                           BorderBrush="#6B6B6B" 
+                           BorderThickness="2"
+                           Padding="2">
+                        <TextBox Text="{Binding Symbol}"
+                            Watermark="Ej: bitcoin, ethereum"
+                            FontSize="14"
+                            Padding="12"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            IsReadOnly="True"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Cantidad -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="📦 Cantidad" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <NumericUpDown Value="{Binding Quantity}"
+                                  Minimum="0.00000001"
+                                  Maximum="1000000000"
+                                  Increment="0.1"
+                                  FormatString="F8"
+                                  Padding="12"
+                                  FontSize="14"
+                                  Background="#3C3C3C"
+                                  BorderBrush="#6B6B6B"
+                                  BorderThickness="2"
+                                  CornerRadius="8"/>
+                </StackPanel>
+
+                <!-- Precio de Compra -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="💵 Precio de Compra (USD)" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <NumericUpDown Value="{Binding PurchasePrice}"
+                                  Minimum="0"
+                                  Maximum="1000000000"
+                                  Increment="1"
+                                  FormatString="C2"
+                                  Padding="12"
+                                  FontSize="14"
+                                  Background="#3C3C3C"
+                                  BorderBrush="#6B6B6B"
+                                  BorderThickness="2"
+                                  CornerRadius="8"/>
+                </StackPanel>
+
+                <!-- Precio Actual -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="💰 Precio Actual (USD)" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <NumericUpDown Value="{Binding CurrentPrice}"
+                                  Minimum="0"
+                                  Maximum="1000000000"
+                                  Increment="1"
+                                  FormatString="C2"
+                                  Padding="12"
+                                  FontSize="14"
+                                  Background="#3C3C3C"
+                                  BorderBrush="#6B6B6B"
+                                  BorderThickness="2"
+                                  CornerRadius="8"/>
+                    <TextBlock Text="💡 Se actualizará automáticamente si es cripto o skin" 
+                              FontSize="12" 
+                              Foreground="#CCCCCC"
+                              FontStyle="Italic"/>
+                </StackPanel>
+
+                <!-- Fecha de Compra -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="📅 Fecha de Compra" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <DatePicker SelectedDate="{Binding PurchaseDate}"
+                               Padding="12"
+                               FontSize="14"
+                               Background="#3C3C3C"
+                               BorderBrush="#6B6B6B"
+                               BorderThickness="2"
+                               CornerRadius="8"/>
+                </StackPanel>
+
+                <!-- Notas -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="📝 Notas (opcional)" 
+                              FontWeight="SemiBold"
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <Border CornerRadius="8" 
+                           Background="#3C3C3C" 
+                           BorderBrush="#6B6B6B" 
+                           BorderThickness="2"
+                           Padding="2">
+                        <TextBox Text="{Binding Notes}"
+                                AcceptsReturn="True"
+                                Height="90"
+                                TextWrapping="Wrap"
+                                Watermark="Información adicional sobre esta inversión..."
+                                FontSize="14"
+                                Padding="12"
+                                BorderThickness="0"
+                                Background="Transparent"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Resumen -->
+                <Border Background="#2D2D30" 
+                       CornerRadius="12" 
+                       Padding="20"
+                       IsVisible="{Binding Quantity}"
+                       BorderBrush="#007ACC"
+                       BorderThickness="2"
+                       BoxShadow="0 4 8 0 #11000000">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="📊 Resumen de Inversión" 
+                                  FontWeight="Bold" 
+                                  FontSize="16"
+                                  Foreground="#FFFFFF"/>
+                        <TextBlock FontSize="14">
+                            <Run Text="Valor total de compra: " Foreground="#CCCCCC"/>
+                            <Run Text="$" FontWeight="SemiBold"/>
+                            <Run Text="{Binding PurchasePrice}" FontWeight="SemiBold"/>
+                            <Run Text=" × " Foreground="#CCCCCC"/>
+                            <Run Text="{Binding Quantity}" FontWeight="SemiBold"/>
+                            <Run Text=" = " Foreground="#CCCCCC"/>
+                            <Run Text="$" FontWeight="Bold" Foreground="#16C60C" FontSize="16"/>
+                            <Run Text="{Binding TotalPurchaseValue, StringFormat='{}{0:N2}'}" FontWeight="Bold" Foreground="#16C60C" FontSize="16"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Botones -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
+                    <Button Grid.Column="0" 
+                           Content="💾 Guardar Inversión" 
+                           Command="{Binding SaveInvestmentCommand}"
+                           HorizontalAlignment="Stretch"
+                           Padding="16,14"
+                           Background="#16C60C"
+                           Foreground="White"
+                           FontWeight="Bold"
+                           FontSize="15"
+                           CornerRadius="8">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#13A10E"/>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#0E7A0D"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                    
+                    <Button Grid.Column="1" 
+                           Content="🔄 Limpiar" 
+                           Command="{Binding ClearFormCommand}"
+                           HorizontalAlignment="Stretch"
+                           Padding="16,14"
+                           Background="#95A5A6"
+                           Foreground="White"
+                           FontWeight="SemiBold"
+                           FontSize="15"
+                           CornerRadius="8">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#7F8C8D"/>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#707B7C"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                </Grid>
+
+                <!-- Estado -->
+                <TextBlock Text="{Binding StatusMessage}" 
+                          FontSize="13" 
+                          Foreground="#2980B9"
+                          TextAlignment="Center"
+                          IsVisible="{Binding StatusMessage.Length}"/>
+
+                <!-- Indicador de carga -->
+                <ProgressBar IsIndeterminate="True"
+                            IsVisible="{Binding IsSearching}"/>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+
+</UserControl>
