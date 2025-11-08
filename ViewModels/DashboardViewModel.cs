@@ -74,6 +74,23 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private ISeries[] _assetDistributionSeries = Array.Empty<ISeries>();
     
+    [ObservableProperty]
+    private ChartPeriod _selectedPeriod = ChartPeriod.Monthly;
+    
+    [ObservableProperty]
+    private string _chartTitle = "Rendimiento Mensual";
+    
+    [ObservableProperty]
+    private string[] _chartLabels = Array.Empty<string>();
+    
+    [ObservableProperty]
+    private bool _isLoadingChart = false;
+    
+    // Propiedades para indicar qué botón está activo
+    public bool IsDailyActive => SelectedPeriod == ChartPeriod.Daily;
+    public bool IsWeeklyActive => SelectedPeriod == ChartPeriod.Weekly;
+    public bool IsMonthlyActive => SelectedPeriod == ChartPeriod.Monthly;
+    
     public DashboardViewModel()
     {
         _investmentService = new InvestmentService();
@@ -326,24 +343,94 @@ public partial class DashboardViewModel : ViewModelBase
         StatusMessage = "Abriendo formulario de nueva inversión...";
     }
     
+    [RelayCommand]
+    private async Task ChangePeriodAsync(string period)
+    {
+        if (IsLoadingChart) return; // Evitar múltiples clics
+        
+        var newPeriod = period switch
+        {
+            "Daily" => ChartPeriod.Daily,
+            "Weekly" => ChartPeriod.Weekly,
+            "Monthly" => ChartPeriod.Monthly,
+            _ => ChartPeriod.Monthly
+        };
+        
+        // Si ya está seleccionado, no hacer nada
+        if (newPeriod == SelectedPeriod) return;
+        
+        Console.WriteLine($"📊 Cambiando período a: {newPeriod}");
+        IsLoadingChart = true;
+        
+        SelectedPeriod = newPeriod;
+        
+        // Notificar cambios en los estados activos
+        OnPropertyChanged(nameof(IsDailyActive));
+        OnPropertyChanged(nameof(IsWeeklyActive));
+        OnPropertyChanged(nameof(IsMonthlyActive));
+        
+        ChartTitle = SelectedPeriod switch
+        {
+            ChartPeriod.Daily => "Rendimiento Diario (últimos 30 días)",
+            ChartPeriod.Weekly => "Rendimiento Semanal (últimas 12 semanas)",
+            ChartPeriod.Monthly => "Rendimiento Mensual (últimos 12 meses)",
+            _ => "Rendimiento Mensual"
+        };
+        
+        await LoadChartsAsync();
+        IsLoadingChart = false;
+    }
+    
     private async Task LoadChartsAsync()
     {
         try
         {
-            // Gráfico de rendimiento mensual
-            var monthlyData = await _investmentService.GetMonthlyPerformanceAsync();
-            if (monthlyData.Any())
+            // Gráfico de rendimiento por período seleccionado
+            var performanceData = await _investmentService.GetPerformanceByPeriodAsync(SelectedPeriod);
+            
+            if (performanceData.Any())
             {
+                // Preparar etiquetas según el período
+                ChartLabels = performanceData.Select(p => FormatLabel(p.Period, SelectedPeriod)).ToArray();
+                
+                // Calcular cambio porcentual
+                var firstValue = performanceData.First().TotalValue;
+                var lastValue = performanceData.Last().TotalValue;
+                var percentChange = firstValue > 0 ? ((lastValue - firstValue) / firstValue * 100) : 0;
+                var changeSymbol = percentChange >= 0 ? "▲" : "▼";
+                
                 MonthlyPerformanceSeries = new ISeries[]
                 {
                     new LineSeries<decimal>
                     {
-                        Values = monthlyData.Select(m => m.TotalValue).ToArray(),
-                        Name = "Valor del Portfolio",
-                        Fill = null,
-                        Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 3 }
+                        Values = performanceData.Select(p => p.TotalValue).ToArray(),
+                        Name = $"Portfolio {changeSymbol} {Math.Abs(percentChange):F2}%",
+                        Fill = new SolidColorPaint(new SKColor(59, 130, 246, 50)),
+                        Stroke = new SolidColorPaint(new SKColor(59, 130, 246)) { StrokeThickness = 3 },
+                        GeometrySize = 10,
+                        GeometryStroke = new SolidColorPaint(new SKColor(59, 130, 246)) { StrokeThickness = 3 },
+                        GeometryFill = new SolidColorPaint(SKColors.White),
+                        LineSmoothness = 0.65
                     }
                 };
+                
+                Console.WriteLine($"📊 Gráfico cargado: {performanceData.Count} puntos | Cambio: {changeSymbol}{Math.Abs(percentChange):F2}%");
+            }
+            else
+            {
+                // Sin datos, mostrar mensaje
+                MonthlyPerformanceSeries = new ISeries[]
+                {
+                    new LineSeries<decimal>
+                    {
+                        Values = new decimal[] { 0 },
+                        Name = "Sin datos disponibles",
+                        Fill = null,
+                        Stroke = new SolidColorPaint(new SKColor(128, 128, 128)) { StrokeThickness = 2 }
+                    }
+                };
+                Console.WriteLine($"⚠ No hay datos de historial para el período {SelectedPeriod}");
+                StatusMessage = "Actualiza los precios para comenzar a ver el historial";
             }
             
             // Gráfico de distribución por tipo
@@ -372,6 +459,24 @@ public partial class DashboardViewModel : ViewModelBase
         }
     }
     
+    private string FormatLabel(string period, ChartPeriod chartPeriod)
+    {
+        try
+        {
+            return chartPeriod switch
+            {
+                ChartPeriod.Daily => DateTime.Parse(period).ToString("dd MMM"),
+                ChartPeriod.Weekly => period.Replace("-W", " S"),
+                ChartPeriod.Monthly => DateTime.Parse(period + "-01").ToString("MMM yyyy"),
+                _ => period
+            };
+        }
+        catch
+        {
+            return period;
+        }
+    }
+    
     private void CreateCryptoSummary()
     {
         CryptoSummaries.Clear();
@@ -384,18 +489,24 @@ public partial class DashboardViewModel : ViewModelBase
                 var earningIndex = name.IndexOf(" [EARNING]");
                 return earningIndex >= 0 ? name.Substring(0, earningIndex) : name;
             })
-            .Select(g => new CryptoSummary
-            {
-                Symbol = g.Key,
-                TotalQuantity = g.Sum(i => i.Quantity),
-                TotalInvested = g.Sum(i => i.TotalPurchaseValue), // Los earnings tienen PurchasePrice = 0
-                CurrentValue = g.Sum(i => i.CurrentValue),
-                CurrentPrice = g.First().CurrentPrice,
-                ProfitLoss = g.Sum(i => i.ProfitLoss),
-                ProfitLossPercentage = g.Sum(i => i.TotalPurchaseValue) > 0 
-                    ? (g.Sum(i => i.CurrentValue) - g.Sum(i => i.TotalPurchaseValue)) / g.Sum(i => i.TotalPurchaseValue) * 100 
-                    : 0,
-                ImageUrl = g.First().ImageUrl
+            .Select(g => {
+                // Calcular una vez para evitar múltiples iteraciones
+                var totalInvested = g.Sum(i => i.TotalPurchaseValue);
+                var currentValue = g.Sum(i => i.CurrentValue);
+                
+                return new CryptoSummary
+                {
+                    Symbol = g.Key,
+                    TotalQuantity = g.Sum(i => i.Quantity),
+                    TotalInvested = totalInvested,
+                    CurrentValue = currentValue,
+                    CurrentPrice = g.First().CurrentPrice,
+                    ProfitLoss = g.Sum(i => i.ProfitLoss),
+                    ProfitLossPercentage = totalInvested > 0 
+                        ? (currentValue - totalInvested) / totalInvested * 100 
+                        : 0,
+                    ImageUrl = g.First().ImageUrl
+                };
             })
             .OrderByDescending(c => c.CurrentValue)
             .ToList();

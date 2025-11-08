@@ -4,12 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:HowsMyMoney.ViewModels"
              xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:material="using:Material.Styles"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             xmlns:converters="using:HowsMyMoney.Converters"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              x:Class="HowsMyMoney.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
 
     <UserControl.Resources>
         <vm:ProfitLossColorConverter x:Key="ProfitLossColorConverter"/>
+        <converters:UrlToBitmapConverter x:Key="UrlToBitmapConverter"/>
+        <converters:InverseBoolToOpacityConverter x:Key="InverseBoolToOpacityConverter"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -50,61 +55,74 @@
     <ScrollViewer>
         <StackPanel Spacing="25" Margin="30">
             <!-- Encabezado y botones de acción -->
-            <Grid ColumnDefinitions="*,Auto,Auto">
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="📊 Dashboard de Inversiones" 
-                              FontSize="32" 
-                              FontWeight="Bold"
-                              Foreground="#FFFFFF"/>
-                    <TextBlock Text="Gestiona y monitorea tus inversiones en tiempo real" 
-                              FontSize="14" 
-                              Foreground="#CCCCCC"
-                              Margin="0,5,0,0"/>
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <!-- Icono + Título -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15" Margin="0,0,20,0">
+                    <icons:MaterialIcon Kind="ChartLine" Width="42" Height="42" Foreground="#8B5CF6"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Dashboard de Inversiones" 
+                                  FontSize="28" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="#FFFFFF"/>
+                        <TextBlock Text="Gestiona y monitorea tus inversiones en tiempo real" 
+                                  FontSize="13" 
+                                  Foreground="#AAAAAA"
+                                  Margin="0,3,0,0"/>
+                    </StackPanel>
                 </StackPanel>
                 
-                <Button Grid.Column="1" 
-                       Content="🔄 Actualizar Precios" 
+                <!-- Spacer -->
+                <Panel Grid.Column="1"/>
+                
+                <Button Grid.Column="2" 
                        Command="{Binding UpdatePricesCommand}"
                        Classes="modern"
-                       Margin="0,0,15,0"
-                       Padding="20,14"
-                       FontWeight="Bold"
+                       Margin="0,0,12,0"
+                       Padding="18,12"
+                       FontWeight="SemiBold"
                        FontSize="14"
                        Foreground="White"
-                       CornerRadius="12">
+                       CornerRadius="10">
                     <Button.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#3B82F6" Offset="0"/>
-                            <GradientStop Color="#007ACC" Offset="1"/>
+                            <GradientStop Color="#1D4ED8" Offset="1"/>
                         </LinearGradientBrush>
                     </Button.Background>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="Refresh" Width="20" Height="20"/>
+                        <TextBlock Text="Actualizar Precios" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Button.Styles>
                         <Style Selector="Button:pointerover /template/ ContentPresenter">
                             <Setter Property="Background">
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                     <GradientStop Color="#2563EB" Offset="0"/>
-                                    <GradientStop Color="#005A9E" Offset="1"/>
+                                    <GradientStop Color="#1E40AF" Offset="1"/>
                                 </LinearGradientBrush>
                             </Setter>
                         </Style>
                     </Button.Styles>
                 </Button>
                 
-                <Button Grid.Column="2" 
-                       Content="💾 Exportar CSV" 
+                <Button Grid.Column="3" 
                        Command="{Binding ExportToCsvCommand}"
                        Classes="modern"
-                       Padding="20,14"
-                       FontWeight="Bold"
+                       Padding="18,12"
+                       FontWeight="SemiBold"
                        FontSize="14"
                        Foreground="White"
-                       CornerRadius="12">
+                       CornerRadius="10">
                     <Button.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#10B981" Offset="0"/>
                             <GradientStop Color="#059669" Offset="1"/>
                         </LinearGradientBrush>
                     </Button.Background>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="FileExport" Width="20" Height="20"/>
+                        <TextBlock Text="Exportar CSV" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Button.Styles>
                         <Style Selector="Button:pointerover /template/ ContentPresenter">
                             <Setter Property="Background">
@@ -120,7 +138,7 @@
 
             <!-- Tarjetas de resumen con gradientes modernos -->
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="20">
-                <!-- Total Inversiones -->
+                                <!-- Total Inversiones -->
                 <Border Grid.Column="0" 
                        Classes="card"
                        CornerRadius="16" 
@@ -135,20 +153,133 @@
                             <GradientStop Color="#6D28D9" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="📈" 
-                                  FontSize="32"
-                                  HorizontalAlignment="Left"/>
-                        <TextBlock Text="Total Inversiones" 
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                        <icons:MaterialIcon Grid.Row="0" Grid.Column="1" 
+                                          Kind="ChartBox" 
+                                          Width="38" Height="38" 
+                                          Foreground="White" 
+                                          Opacity="0.9"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="Total Inversiones" 
                                   FontSize="14" 
                                   Foreground="White"
                                   Opacity="0.85"
-                                  FontWeight="Medium"/>
-                        <TextBlock Text="{Binding TotalInvestments}" 
+                                  FontWeight="Medium"
+                                  Margin="0,12,0,8"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="{Binding TotalInvestments}" 
                                   FontSize="40" 
                                   FontWeight="ExtraBold"
                                   Foreground="White"/>
-                    </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Invertido -->
+                <Border Grid.Column="1" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#3B82F6" Offset="0"/>
+                            <GradientStop Color="#1D4ED8" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                        <icons:MaterialIcon Grid.Row="0" Grid.Column="1" 
+                                          Kind="CashMultiple" 
+                                          Width="38" Height="38" 
+                                          Foreground="White" 
+                                          Opacity="0.9"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="Total Invertido" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"
+                                  Margin="0,12,0,8"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="{Binding TotalInvested, StringFormat='${0:N0}'}" 
+                                  FontSize="36" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="White"/>
+                    </Grid>
+                </Border>
+
+                <!-- Valor Actual -->
+                <Border Grid.Column="2" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#10B981" Offset="0"/>
+                            <GradientStop Color="#059669" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                        <icons:MaterialIcon Grid.Row="0" Grid.Column="1" 
+                                          Kind="DiamondStone" 
+                                          Width="38" Height="38" 
+                                          Foreground="White" 
+                                          Opacity="0.9"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="Valor Actual" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"
+                                  Margin="0,12,0,8"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="{Binding CurrentValue, StringFormat='${0:N0}'}" 
+                                  FontSize="36" 
+                                  FontWeight="ExtraBold"
+                                  Foreground="White"/>
+                    </Grid>
+                </Border>
+
+                <!-- Ganancia/Pérdida -->
+                <Border Grid.Column="3" 
+                       Classes="card"
+                       CornerRadius="16" 
+                       Padding="24"
+                       BoxShadow="0 8 24 0 #40000000"
+                       ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#F59E0B" Offset="0"/>
+                            <GradientStop Color="#D97706" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                        <icons:MaterialIcon Grid.Row="0" Grid.Column="1" 
+                                          Kind="TrendingUp" 
+                                          Width="38" Height="38" 
+                                          Foreground="White" 
+                                          Opacity="0.9"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Text="Ganancia/Pérdida" 
+                                  FontSize="14" 
+                                  Foreground="White"
+                                  Opacity="0.85"
+                                  FontWeight="Medium"
+                                  Margin="0,12,0,8"/>
+                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="4">
+                            <TextBlock Text="{Binding TotalProfitLoss, StringFormat='${0:N0}'}" 
+                                      FontSize="36" 
+                                      FontWeight="ExtraBold"
+                                      Foreground="White"/>
+                            <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='+{0:F1}%'}" 
+                                      FontSize="18" 
+                                      FontWeight="Bold"
+                                      Foreground="White"
+                                      Opacity="0.9"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- Invertido -->
@@ -248,39 +379,289 @@
 
             <!-- Gráficos -->
             <Grid ColumnDefinitions="2*,*" ColumnSpacing="20">
-                <!-- Rendimiento Mensual -->
+                <!-- Rendimiento con selector de período -->
                 <Border Grid.Column="0" 
+                       Classes="card"
                        Background="#2D2D30" 
-                       CornerRadius="12" 
+                       CornerRadius="14" 
                        Padding="25"
                        BoxShadow="0 8 16 0 #22000000"
                        BorderBrush="#3E3E42"
                        BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="📈 Rendimiento Mensual" 
-                                  FontSize="18" 
-                                  FontWeight="Bold"
-                                  Foreground="#FFFFFF"
-                                  Margin="0,0,0,20"/>
-                        <lvc:CartesianChart Series="{Binding MonthlyPerformanceSeries}" 
-                                           Height="280"/>
+                        <!-- Header con título y selector de período -->
+                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                <icons:MaterialIcon Kind="ChartLine" 
+                                                  Width="24" Height="24" 
+                                                  Foreground="#3B82F6"
+                                                  VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding ChartTitle}" 
+                                          FontSize="18" 
+                                          FontWeight="Bold"
+                                          Foreground="#FFFFFF"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <!-- Selector de período compacto y responsivo -->
+                            <Border Grid.Column="2" 
+                                   Background="#1E1E20" 
+                                   CornerRadius="8" 
+                                   Padding="3"
+                                   HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal" Spacing="3">
+                                    <!-- Botón Diario -->
+                                    <Button Command="{Binding ChangePeriodCommand}"
+                                           CommandParameter="Daily"
+                                           Width="80"
+                                           Height="32"
+                                           Padding="8,6"
+                                           CornerRadius="6"
+                                           Cursor="Hand"
+                                           IsEnabled="{Binding !IsLoadingChart}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <icons:MaterialIcon Kind="CalendarToday" 
+                                                              Width="14" Height="14"
+                                                              VerticalAlignment="Center"/>
+                                            <TextBlock Text="Día" 
+                                                      FontSize="12" 
+                                                      FontWeight="SemiBold"
+                                                      VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Button.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Foreground" Value="#8E8E93"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="Button[IsEnabled=True]:pointerover">
+                                                <Setter Property="Background" Value="#2D2D30"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <Button.IsVisible>
+                                            <Binding Path="!IsDailyActive"/>
+                                        </Button.IsVisible>
+                                    </Button>
+                                    
+                                    <!-- Botón Diario ACTIVO -->
+                                    <Border Width="80"
+                                           Height="32"
+                                           CornerRadius="6" 
+                                           Padding="8,6"
+                                           IsVisible="{Binding IsDailyActive}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#3B82F6" Offset="0"/>
+                                                <GradientStop Color="#2563EB" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                            <icons:MaterialIcon Kind="CalendarToday" 
+                                                              Width="14" Height="14"
+                                                              Foreground="White"
+                                                              VerticalAlignment="Center"/>
+                                            <TextBlock Text="Día" 
+                                                      FontSize="12" 
+                                                      FontWeight="Bold"
+                                                      Foreground="White"
+                                                      VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- Botón Semanal -->
+                                    <Button Command="{Binding ChangePeriodCommand}"
+                                           CommandParameter="Weekly"
+                                           Width="90"
+                                           Height="32"
+                                           Padding="8,6"
+                                           CornerRadius="6"
+                                           Cursor="Hand"
+                                           IsEnabled="{Binding !IsLoadingChart}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <icons:MaterialIcon Kind="CalendarWeek" 
+                                                              Width="14" Height="14"
+                                                              VerticalAlignment="Center"/>
+                                            <TextBlock Text="Semana" 
+                                                      FontSize="12" 
+                                                      FontWeight="SemiBold"
+                                                      VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Button.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Foreground" Value="#8E8E93"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="Button[IsEnabled=True]:pointerover">
+                                                <Setter Property="Background" Value="#2D2D30"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <Button.IsVisible>
+                                            <Binding Path="!IsWeeklyActive"/>
+                                        </Button.IsVisible>
+                                    </Button>
+                                    
+                                    <!-- Botón Semanal ACTIVO -->
+                                    <Border Width="90"
+                                           Height="32"
+                                           CornerRadius="6" 
+                                           Padding="8,6"
+                                           IsVisible="{Binding IsWeeklyActive}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#3B82F6" Offset="0"/>
+                                                <GradientStop Color="#2563EB" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                            <icons:MaterialIcon Kind="CalendarWeek" 
+                                                              Width="14" Height="14"
+                                                              Foreground="White"
+                                                              VerticalAlignment="Center"/>
+                                            <TextBlock Text="Semana" 
+                                                      FontSize="12" 
+                                                      FontWeight="Bold"
+                                                      Foreground="White"
+                                                      VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- Botón Mensual -->
+                                    <Button Command="{Binding ChangePeriodCommand}"
+                                           CommandParameter="Monthly"
+                                           Width="80"
+                                           Height="32"
+                                           Padding="8,6"
+                                           CornerRadius="6"
+                                           Cursor="Hand"
+                                           IsEnabled="{Binding !IsLoadingChart}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <icons:MaterialIcon Kind="CalendarMonth" 
+                                                              Width="14" Height="14"
+                                                              VerticalAlignment="Center"/>
+                                            <TextBlock Text="Mes" 
+                                                      FontSize="12" 
+                                                      FontWeight="SemiBold"
+                                                      VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Button.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Foreground" Value="#8E8E93"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="Button[IsEnabled=True]:pointerover">
+                                                <Setter Property="Background" Value="#2D2D30"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <Button.IsVisible>
+                                            <Binding Path="!IsMonthlyActive"/>
+                                        </Button.IsVisible>
+                                    </Button>
+                                    
+                                    <!-- Botón Mensual ACTIVO -->
+                                    <Border Width="80"
+                                           Height="32"
+                                           CornerRadius="6" 
+                                           Padding="8,6"
+                                           IsVisible="{Binding IsMonthlyActive}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#3B82F6" Offset="0"/>
+                                                <GradientStop Color="#2563EB" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                            <icons:MaterialIcon Kind="CalendarMonth" 
+                                                              Width="14" Height="14"
+                                                              Foreground="White"
+                                                              VerticalAlignment="Center"/>
+                                            <TextBlock Text="Mes" 
+                                                      FontSize="12" 
+                                                      FontWeight="Bold"
+                                                      Foreground="White"
+                                                      VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        
+                        <!-- Contenedor del gráfico con loading -->
+                        <Grid Height="280">
+                            <!-- Gráfico -->
+                            <lvc:CartesianChart Series="{Binding MonthlyPerformanceSeries}"
+                                               Opacity="{Binding IsLoadingChart, Converter={StaticResource InverseBoolToOpacityConverter}}"/>
+                            
+                            <!-- Indicador de carga -->
+                            <Border Background="#2D2D30F0" 
+                                   CornerRadius="12"
+                                   IsVisible="{Binding IsLoadingChart}">
+                                <StackPanel HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"
+                                           Spacing="16">
+                                    <Border Width="60" Height="60" 
+                                           CornerRadius="30"
+                                           BoxShadow="0 4 16 0 #603B82F6">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#3B82F6" Offset="0"/>
+                                                <GradientStop Color="#2563EB" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <icons:MaterialIcon Kind="ChartLineVariant" 
+                                                          Width="32" Height="32"
+                                                          Foreground="White"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="Cargando datos del gráfico..." 
+                                              FontSize="14" 
+                                              FontWeight="SemiBold"
+                                              Foreground="#FFFFFF"
+                                              HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
                 <!-- Distribución por Tipo -->
                 <Border Grid.Column="1" 
+                       Classes="card"
                        Background="#2D2D30" 
-                       CornerRadius="12" 
+                       CornerRadius="14" 
                        Padding="25"
                        BoxShadow="0 8 16 0 #22000000"
                        BorderBrush="#3E3E42"
                        BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="🎯 Distribución" 
-                                  FontSize="18" 
-                                  FontWeight="Bold"
-                                  Foreground="#FFFFFF"
-                                  Margin="0,0,0,20"/>
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,20">
+                            <icons:MaterialIcon Grid.Column="0" 
+                                              Kind="ChartPie" 
+                                              Width="24" Height="24" 
+                                              Foreground="#10B981"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1"
+                                      Text="Distribución" 
+                                      FontSize="18" 
+                                      FontWeight="Bold"
+                                      Foreground="#FFFFFF"
+                                      VerticalAlignment="Center"/>
+                        </Grid>
                         <lvc:PieChart Series="{Binding AssetDistributionSeries}" 
                                      Height="280"/>
                     </StackPanel>
@@ -297,22 +678,33 @@
                    BorderThickness="1"
                    IsVisible="{Binding CryptoSummaries.Count}">
                 <StackPanel>
-                    <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,25">
-                        <TextBlock Grid.Column="0"
-                                  Text="💰 Resumen de Criptomonedas" 
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,0,0,25">
+                        <icons:MaterialIcon Grid.Column="0"
+                                          Kind="Bitcoin" 
+                                          Width="28" Height="28" 
+                                          Foreground="#F59E0B"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,12,0"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="Resumen de Criptomonedas" 
                                   FontSize="22" 
                                   FontWeight="ExtraBold"
-                                  Foreground="#FFFFFF"/>
-                        <Border Grid.Column="1"
+                                  Foreground="#FFFFFF"
+                                  VerticalAlignment="Center"/>
+                        <Border Grid.Column="3"
                                Background="#8B5CF6"
                                CornerRadius="12"
-                               Padding="8,4"
+                               Padding="10,6"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center">
-                            <TextBlock Text="{Binding CryptoSummaries.Count, StringFormat='{}{0} activos'}"
-                                      FontSize="12"
-                                      FontWeight="Bold"
-                                      Foreground="White"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="Counter" Width="16" Height="16" Foreground="White"/>
+                                <TextBlock Text="{Binding CryptoSummaries.Count, StringFormat='{}{0} activos'}"
+                                          FontSize="12"
+                                          FontWeight="Bold"
+                                          Foreground="White"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Border>
                     </Grid>
                     
@@ -336,7 +728,7 @@
                                                ClipToBounds="True"
                                                Background="#3C3C3C"
                                                Margin="0,0,20,0">
-                                            <Image Source="{Binding ImageUrl}" 
+                                            <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                   Stretch="UniformToFill"/>
                                         </Border>
                                         
@@ -393,20 +785,19 @@
                                         
                                         <!-- Botón Ajustar Earnings -->
                                         <Button Grid.Column="5"
-                                               Content="📊" 
                                                Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenAdjustCryptoDialogCommand}"
                                                CommandParameter="{Binding}"
                                                Classes="modern"
-                                               Padding="14,10"
+                                               Padding="12,10"
                                                Foreground="White"
                                                CornerRadius="10"
-                                               FontSize="18"
                                                VerticalAlignment="Center"
                                                ToolTip.Tip="Ajustar cantidad por earnings/staking">
+                                            <icons:MaterialIcon Kind="ChartTimelineVariant" Width="22" Height="22"/>
                                             <Button.Background>
                                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                                     <GradientStop Color="#3B82F6" Offset="0"/>
-                                                    <GradientStop Color="#007ACC" Offset="1"/>
+                                                    <GradientStop Color="#1D4ED8" Offset="1"/>
                                                 </LinearGradientBrush>
                                             </Button.Background>
                                             <Button.Styles>
@@ -414,7 +805,7 @@
                                                     <Setter Property="Background">
                                                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                                             <GradientStop Color="#2563EB" Offset="0"/>
-                                                            <GradientStop Color="#005A9E" Offset="1"/>
+                                                            <GradientStop Color="#1E40AF" Offset="1"/>
                                                         </LinearGradientBrush>
                                                     </Setter>
                                                 </Style>
@@ -430,24 +821,37 @@
 
             <!-- Inversiones en Criptomonedas -->
             <Border Background="#2D2D30" 
-                   CornerRadius="12" 
+                   Classes="card"
+                   CornerRadius="14" 
                    Padding="25"
                    BoxShadow="0 8 16 0 #22000000"
                    BorderBrush="#3E3E42"
                    BorderThickness="1"
                    IsVisible="{Binding CryptoInvestments.Count}">
                 <StackPanel>
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
-                        <TextBlock Grid.Column="0"
-                                  Text="💎 Inversiones en Criptomonedas" 
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
+                        <icons:MaterialIcon Grid.Column="0"
+                                          Kind="CurrencyBtc" 
+                                          Width="24" Height="24" 
+                                          Foreground="#3B82F6"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,12,0"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="Inversiones en Criptomonedas" 
                                   FontSize="18" 
                                   FontWeight="Bold"
-                                  Foreground="#FFFFFF"/>
-                        <TextBlock Grid.Column="1"
-                                  Text="{Binding CryptoInvestments.Count, StringFormat='{}{0} inversiones'}"
-                                  FontSize="14"
-                                  Foreground="#AAAAAA"
+                                  Foreground="#FFFFFF"
                                   VerticalAlignment="Center"/>
+                        <Border Grid.Column="2"
+                               Background="#3E3E42"
+                               CornerRadius="8"
+                               Padding="10,6"
+                               VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CryptoInvestments.Count, StringFormat='{}{0} inversiones'}"
+                                      FontSize="12"
+                                      FontWeight="SemiBold"
+                                      Foreground="#AAAAAA"/>
+                        </Border>
                     </Grid>
                     
                     <!-- Vista de Lista Personalizada -->
@@ -474,7 +878,7 @@
                                                        Background="#3C3C3C"
                                                        Margin="0,0,15,0"
                                                        VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageUrl}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
@@ -557,19 +961,18 @@
                                             
                                             <!-- Columna 6: Botón Eliminar -->
                                             <Button Grid.Column="5"
-                                                   Content="🗑️" 
                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
                                                    CommandParameter="{Binding}"
-                                                   Padding="12,8"
-                                                   Background="#D32F2F"
+                                                   Padding="10,8"
+                                                   Background="#DC2626"
                                                    Foreground="White"
-                                                   CornerRadius="6"
-                                                   FontSize="18"
+                                                   CornerRadius="8"
                                                    VerticalAlignment="Center"
                                                    ToolTip.Tip="Eliminar inversión">
+                                                <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                                                 <Button.Styles>
                                                     <Style Selector="Button:pointerover">
-                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                        <Setter Property="Background" Value="#B91C1C"/>
                                                     </Style>
                                                 </Button.Styles>
                                             </Button>
@@ -584,24 +987,37 @@
 
             <!-- Inversiones en Skins CS:GO -->
             <Border Background="#2D2D30" 
-                   CornerRadius="12" 
+                   Classes="card"
+                   CornerRadius="14" 
                    Padding="25"
                    BoxShadow="0 8 16 0 #22000000"
                    BorderBrush="#3E3E42"
                    BorderThickness="1"
                    IsVisible="{Binding SkinInvestments.Count}">
                 <StackPanel>
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
-                        <TextBlock Grid.Column="0"
-                                  Text="🔫 Inversiones en Skins CS:GO" 
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
+                        <icons:MaterialIcon Grid.Column="0"
+                                          Kind="SwordCross" 
+                                          Width="24" Height="24" 
+                                          Foreground="#10B981"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,12,0"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="Inversiones en Skins CS:GO" 
                                   FontSize="18" 
                                   FontWeight="Bold"
-                                  Foreground="#FFFFFF"/>
-                        <TextBlock Grid.Column="1"
-                                  Text="{Binding SkinInvestments.Count, StringFormat='{}{0} inversiones'}"
-                                  FontSize="14"
-                                  Foreground="#AAAAAA"
+                                  Foreground="#FFFFFF"
                                   VerticalAlignment="Center"/>
+                        <Border Grid.Column="2"
+                               Background="#3E3E42"
+                               CornerRadius="8"
+                               Padding="10,6"
+                               VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SkinInvestments.Count, StringFormat='{}{0} inversiones'}"
+                                      FontSize="12"
+                                      FontWeight="SemiBold"
+                                      Foreground="#AAAAAA"/>
+                        </Border>
                     </Grid>
                     
                     <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
@@ -626,7 +1042,7 @@
                                                        Background="#3C3C3C"
                                                        Margin="0,0,15,0"
                                                        VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageUrl}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
@@ -704,19 +1120,18 @@
                                             </Border>
                                             
                                             <Button Grid.Column="5"
-                                                   Content="🗑️" 
                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
                                                    CommandParameter="{Binding}"
-                                                   Padding="12,8"
-                                                   Background="#D32F2F"
+                                                   Padding="10,8"
+                                                   Background="#DC2626"
                                                    Foreground="White"
-                                                   CornerRadius="6"
-                                                   FontSize="18"
+                                                   CornerRadius="8"
                                                    VerticalAlignment="Center"
                                                    ToolTip.Tip="Eliminar inversión">
+                                                <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                                                 <Button.Styles>
                                                     <Style Selector="Button:pointerover">
-                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                        <Setter Property="Background" Value="#B91C1C"/>
                                                     </Style>
                                                 </Button.Styles>
                                             </Button>
@@ -731,24 +1146,37 @@
 
             <!-- Inversiones Manuales -->
             <Border Background="#2D2D30" 
-                   CornerRadius="12" 
+                   Classes="card"
+                   CornerRadius="14" 
                    Padding="25"
                    BoxShadow="0 8 16 0 #22000000"
                    BorderBrush="#3E3E42"
                    BorderThickness="1"
                    IsVisible="{Binding ManualInvestments.Count}">
                 <StackPanel>
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
-                        <TextBlock Grid.Column="0"
-                                  Text="📝 Inversiones Manuales" 
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
+                        <icons:MaterialIcon Grid.Column="0"
+                                          Kind="PencilBox" 
+                                          Width="24" Height="24" 
+                                          Foreground="#F59E0B"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,12,0"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="Inversiones Manuales" 
                                   FontSize="18" 
                                   FontWeight="Bold"
-                                  Foreground="#FFFFFF"/>
-                        <TextBlock Grid.Column="1"
-                                  Text="{Binding ManualInvestments.Count, StringFormat='{}{0} inversiones'}"
-                                  FontSize="14"
-                                  Foreground="#AAAAAA"
+                                  Foreground="#FFFFFF"
                                   VerticalAlignment="Center"/>
+                        <Border Grid.Column="2"
+                               Background="#3E3E42"
+                               CornerRadius="8"
+                               Padding="10,6"
+                               VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ManualInvestments.Count, StringFormat='{}{0} inversiones'}"
+                                      FontSize="12"
+                                      FontWeight="SemiBold"
+                                      Foreground="#AAAAAA"/>
+                        </Border>
                     </Grid>
                     
                     <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
@@ -772,7 +1200,7 @@
                                                        Background="#3C3C3C"
                                                        Margin="0,0,15,0"
                                                        VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageUrl}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
@@ -850,19 +1278,18 @@
                                             </Border>
                                             
                                             <Button Grid.Column="5"
-                                                   Content="🗑️" 
                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
                                                    CommandParameter="{Binding}"
-                                                   Padding="12,8"
-                                                   Background="#D32F2F"
+                                                   Padding="10,8"
+                                                   Background="#DC2626"
                                                    Foreground="White"
-                                                   CornerRadius="6"
-                                                   FontSize="18"
+                                                   CornerRadius="8"
                                                    VerticalAlignment="Center"
                                                    ToolTip.Tip="Eliminar inversión">
+                                                <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                                                 <Button.Styles>
                                                     <Style Selector="Button:pointerover">
-                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                        <Setter Property="Background" Value="#B91C1C"/>
                                                     </Style>
                                                 </Button.Styles>
                                             </Button>
@@ -899,11 +1326,14 @@
                BoxShadow="0 12 24 0 #88000000">
             <StackPanel Spacing="20">
                 <!-- Título -->
-                <TextBlock Text="📊 Ajustar Cantidad por Earnings" 
-                          FontSize="22" 
-                          FontWeight="Bold"
-                          Foreground="White"
-                          HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                    <icons:MaterialIcon Kind="ChartTimelineVariant" Width="28" Height="28" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                    <TextBlock Text="Ajustar Cantidad por Earnings" 
+                              FontSize="22" 
+                              FontWeight="Bold"
+                              Foreground="White"
+                              VerticalAlignment="Center"/>
+                </StackPanel>
                 
                 <!-- Información de la cripto -->
                 <StackPanel Spacing="10" IsVisible="{Binding SelectedCryptoForAdjustment}">
@@ -959,33 +1389,40 @@
                             BorderBrush="#007ACC"
                             BorderThickness="2"
                             CornerRadius="6"/>
-                    <TextBlock FontSize="11"
-                              Foreground="#4CAF50"
-                              TextWrapping="Wrap"
-                              Margin="5,5,0,0">
-                        <Run Text="✅ Se creará un nuevo registro marcado como [EARNING]"/>
-                    </TextBlock>
-                    <TextBlock FontSize="11"
-                              Foreground="#FFA726"
-                              TextWrapping="Wrap"
-                              Margin="5,0,0,0">
-                        <Run Text="💡 Tus compras originales NO se modificarán (mantiene trazabilidad)"/>
-                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="5,5,0,0">
+                        <icons:MaterialIcon Kind="CheckCircle" Width="14" Height="14" Foreground="#4CAF50" VerticalAlignment="Center"/>
+                        <TextBlock FontSize="11"
+                                  Foreground="#4CAF50"
+                                  TextWrapping="Wrap"
+                                  Text="Se creará un nuevo registro marcado como [EARNING]"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="5,3,0,0">
+                        <icons:MaterialIcon Kind="LightbulbOn" Width="14" Height="14" Foreground="#FFA726" VerticalAlignment="Center"/>
+                        <TextBlock FontSize="11"
+                                  Foreground="#FFA726"
+                                  TextWrapping="Wrap"
+                                  Text="Tus compras originales NO se modificarán (mantiene trazabilidad)"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
                 </StackPanel>
                 
                 <!-- Botones -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
                     <Button Grid.Column="0"
-                           Content="❌ Cancelar"
                            Command="{Binding CloseAdjustCryptoDialogCommand}"
                            Padding="15,10"
                            Background="#424242"
                            Foreground="White"
-                           CornerRadius="6"
+                           CornerRadius="8"
                            FontSize="14"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Stretch"
                            HorizontalContentAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:MaterialIcon Kind="Close" Width="18" Height="18"/>
+                            <TextBlock Text="Cancelar" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <Button.Styles>
                             <Style Selector="Button:pointerover">
                                 <Setter Property="Background" Value="#616161"/>
@@ -994,19 +1431,22 @@
                     </Button>
                     
                     <Button Grid.Column="1"
-                           Content="✅ Ajustar"
                            Command="{Binding AdjustCryptoQuantityCommand}"
                            Padding="15,10"
-                           Background="#007ACC"
+                           Background="#3B82F6"
                            Foreground="White"
-                           CornerRadius="6"
+                           CornerRadius="8"
                            FontSize="14"
                            FontWeight="Bold"
                            HorizontalAlignment="Stretch"
                            HorizontalContentAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:MaterialIcon Kind="Check" Width="18" Height="18"/>
+                            <TextBlock Text="Ajustar" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <Button.Styles>
                             <Style Selector="Button:pointerover">
-                                <Setter Property="Background" Value="#005A9E"/>
+                                <Setter Property="Background" Value="#2563EB"/>
                             </Style>
                         </Button.Styles>
                     </Button>

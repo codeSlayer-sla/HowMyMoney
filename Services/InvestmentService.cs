@@ -25,6 +25,9 @@ public class InvestmentService
         
         // Asegurar que la base de datos existe
         _context.Database.EnsureCreated();
+        
+        // Migrar esquema para agregar campos Day y Week
+        _context.MigrateDatabaseSchema();
     }
     
     /// <summary>
@@ -44,32 +47,8 @@ public class InvestmentService
     {
         investment.LastPriceUpdate = DateTime.Now;
         
-        // Si es criptomoneda o skin, obtener precio actual
-        if (investment.AssetType == AssetType.Criptomoneda && !string.IsNullOrEmpty(investment.Symbol))
-        {
-            Console.WriteLine($"Agregando cripto: {investment.Name} ({investment.Symbol})");
-            var price = await _coinGeckoService.GetCryptoPriceAsync(investment.Symbol);
-            if (price.HasValue)
-            {
-                investment.CurrentPrice = price.Value;
-                Console.WriteLine($"✓ Precio cripto obtenido: ${price.Value}");
-            }
-        }
-        else if (investment.AssetType == AssetType.SkinCSGO && !string.IsNullOrEmpty(investment.Name))
-        {
-            Console.WriteLine($"Agregando skin CS:GO: {investment.Name}");
-            var price = await _skinportService.GetSkinPriceAsync(investment.Name);
-            if (price.HasValue)
-            {
-                investment.CurrentPrice = price.Value;
-                Console.WriteLine($"✓ Precio CS:GO obtenido: ${price.Value}");
-            }
-            else
-            {
-                Console.WriteLine($"⚠ No se pudo obtener precio para skin CS:GO: {investment.Name}");
-                Console.WriteLine($"⚠ Usando CurrentPrice del formulario: ${investment.CurrentPrice}");
-            }
-        }
+        // Actualizar precio e imagen según tipo de activo
+        await UpdateAssetPriceAndImageAsync(investment, forceImageUpdate: false);
         
         _context.Investments.Add(investment);
         await _context.SaveChangesAsync();
@@ -125,44 +104,17 @@ public class InvestmentService
         {
             try
             {
-                decimal? newPrice = null;
+                await UpdateAssetPriceAndImageAsync(investment, forceImageUpdate: true);
                 
-                if (investment.AssetType == AssetType.Criptomoneda && !string.IsNullOrEmpty(investment.Symbol))
+                if (investment.CurrentPrice > 0)
                 {
-                    Console.WriteLine($"Actualizando cripto: {investment.Name} ({investment.Symbol})");
-                    newPrice = await _coinGeckoService.GetCryptoPriceAsync(investment.Symbol);
-                }
-                else if (investment.AssetType == AssetType.SkinCSGO && !string.IsNullOrEmpty(investment.Name))
-                {
-                    Console.WriteLine($"Actualizando skin CS:GO: {investment.Name}");
-                    newPrice = await _skinportService.GetSkinPriceAsync(investment.Name);
-                    
-                    if (newPrice.HasValue)
-                    {
-                        Console.WriteLine($"✓ Precio CS:GO actualizado: {investment.Name} = ${newPrice.Value}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"⚠ No se pudo obtener precio para skin CS:GO: {investment.Name}");
-                    }
-                }
-                
-                if (newPrice.HasValue && newPrice.Value > 0)
-                {
-                    investment.CurrentPrice = newPrice.Value;
                     investment.LastPriceUpdate = DateTime.Now;
-                    
-                    // Agregar al historial si es un nuevo mes
                     await AddPriceHistoryAsync(investment);
-                }
-                else if (investment.AssetType != AssetType.Manual)
-                {
-                    Console.WriteLine($"⚠ No se actualizó precio para {investment.Name} - newPrice = {newPrice}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error actualizando precio de {investment.Name}: {ex.Message}");
+                Console.WriteLine($"❌ Error actualizando {investment.Name}: {ex.Message}");
             }
         }
         
@@ -170,15 +122,135 @@ public class InvestmentService
     }
     
     /// <summary>
-    /// Agrega un registro al historial de precios
+    /// Actualiza el precio e imagen de un activo según su tipo
+    /// </summary>
+    private async Task UpdateAssetPriceAndImageAsync(Investment investment, bool forceImageUpdate)
+    {
+        if (investment.AssetType == AssetType.Criptomoneda && !string.IsNullOrEmpty(investment.Symbol))
+        {
+            await UpdateCryptoAssetAsync(investment, forceImageUpdate);
+        }
+        else if (investment.AssetType == AssetType.SkinCSGO && !string.IsNullOrEmpty(investment.Name))
+        {
+            await UpdateSkinAssetAsync(investment, forceImageUpdate);
+        }
+    }
+    
+    /// <summary>
+    /// Actualiza precio e imagen de criptomoneda
+    /// </summary>
+    private async Task UpdateCryptoAssetAsync(Investment investment, bool forceImageUpdate)
+    {
+        if (string.IsNullOrEmpty(investment.Symbol))
+        {
+            Console.WriteLine($"⚠ Cripto sin símbolo: {investment.Name}");
+            return;
+        }
+        
+        Console.WriteLine($"Actualizando cripto: {investment.Name} ({investment.Symbol})");
+        
+        bool needsImage = string.IsNullOrEmpty(investment.ImageUrl);
+        
+        if (needsImage || forceImageUpdate)
+        {
+            var cryptoInfo = await _coinGeckoService.GetCryptoFullInfoAsync(investment.Symbol);
+            if (cryptoInfo != null)
+            {
+                investment.CurrentPrice = cryptoInfo.CurrentPrice;
+                investment.ImageUrl = cryptoInfo.ImageUrl;
+                Console.WriteLine($"✓ Precio: ${cryptoInfo.CurrentPrice}, Imagen: {cryptoInfo.ImageUrl}");
+            }
+            else
+            {
+                Console.WriteLine($"⚠ No se pudo obtener info completa para {investment.Symbol}");
+            }
+        }
+        else
+        {
+            var price = await _coinGeckoService.GetCryptoPriceAsync(investment.Symbol);
+            if (price.HasValue)
+            {
+                investment.CurrentPrice = price.Value;
+                Console.WriteLine($"✓ Precio actualizado: ${price.Value}");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Actualiza precio e imagen de skin CS:GO
+    /// </summary>
+    private async Task UpdateSkinAssetAsync(Investment investment, bool forceImageUpdate)
+    {
+        Console.WriteLine($"Actualizando skin CS:GO: {investment.Name}");
+        
+        bool needsImage = string.IsNullOrEmpty(investment.ImageUrl) || HasInvalidImageUrl(investment);
+        
+        if (needsImage)
+        {
+            if (HasInvalidImageUrl(investment))
+            {
+                Console.WriteLine($"  ⚠ Imagen inválida detectada, buscando nueva...");
+            }
+            else
+            {
+                Console.WriteLine($"  🔍 Skin sin imagen, buscando info completa...");
+            }
+            
+            var skins = await _skinportService.SearchSkinsAsync(investment.Name);
+            var skin = skins.FirstOrDefault(s => s.MarketHashName == investment.Name);
+            
+            if (skin != null)
+            {
+                investment.CurrentPrice = skin.MinPrice;
+                investment.ImageUrl = skin.ImageUrl;
+                Console.WriteLine($"✓ Precio: ${skin.MinPrice}, Imagen: {skin.ImageUrl}");
+            }
+            else
+            {
+                var price = await _skinportService.GetSkinPriceAsync(investment.Name);
+                if (price.HasValue)
+                {
+                    investment.CurrentPrice = price.Value;
+                    Console.WriteLine($"✓ Precio: ${price.Value}, ⚠ Sin imagen");
+                }
+            }
+        }
+        else
+        {
+            var price = await _skinportService.GetSkinPriceAsync(investment.Name);
+            if (price.HasValue)
+            {
+                investment.CurrentPrice = price.Value;
+                Console.WriteLine($"✓ Precio actualizado: ${price.Value}");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Verifica si una URL de imagen es inválida
+    /// </summary>
+    private bool HasInvalidImageUrl(Investment investment)
+    {
+        if (string.IsNullOrEmpty(investment.ImageUrl)) return false;
+        
+        return investment.ImageUrl.Contains(investment.Name) || 
+               investment.ImageUrl.Contains(" ") || 
+               investment.ImageUrl.Contains("|");
+    }
+    
+    /// <summary>
+    /// Agrega un registro al historial de precios (diario, semanal y mensual)
     /// </summary>
     private async Task AddPriceHistoryAsync(Investment investment)
     {
-        var currentMonth = DateTime.Now.ToString("yyyy-MM");
+        var now = DateTime.Now;
+        var currentDay = now.ToString("yyyy-MM-dd");
+        var currentWeek = GetIso8601WeekOfYear(now);
+        var currentMonth = now.ToString("yyyy-MM");
         
-        // Verificar si ya existe un registro para este mes
+        // Verificar si ya existe un registro para hoy
         var existingHistory = await _context.PriceHistories
-            .FirstOrDefaultAsync(h => h.InvestmentId == investment.Id && h.Month == currentMonth);
+            .FirstOrDefaultAsync(h => h.InvestmentId == investment.Id && h.Day == currentDay);
         
         if (existingHistory == null)
         {
@@ -186,13 +258,28 @@ public class InvestmentService
             {
                 InvestmentId = investment.Id,
                 Price = investment.CurrentPrice,
-                RecordedAt = DateTime.Now,
+                RecordedAt = now,
+                Day = currentDay,
+                Week = currentWeek,
                 Month = currentMonth
             };
             
             _context.PriceHistories.Add(history);
             await _context.SaveChangesAsync();
         }
+    }
+    
+    /// <summary>
+    /// Calcula el número de semana ISO 8601
+    /// </summary>
+    private string GetIso8601WeekOfYear(DateTime date)
+    {
+        var day = (int)System.Globalization.CultureInfo.CurrentCulture.Calendar.GetDayOfWeek(date);
+        var weekNum = System.Globalization.CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(
+            date, 
+            System.Globalization.CalendarWeekRule.FirstFourDayWeek, 
+            DayOfWeek.Monday);
+        return $"{date.Year}-W{weekNum:D2}";
     }
     
     /// <summary>
@@ -226,7 +313,78 @@ public class InvestmentService
     }
     
     /// <summary>
-    /// Obtiene el rendimiento por mes
+    /// Obtiene el rendimiento por período (diario, semanal o mensual)
+    /// </summary>
+    public async Task<List<PerformanceData>> GetPerformanceByPeriodAsync(ChartPeriod period)
+    {
+        var now = DateTime.Now;
+        DateTime startDate;
+        
+        // Determinar fecha de inicio según el período
+        startDate = period switch
+        {
+            ChartPeriod.Daily => now.AddDays(-30),    // Últimos 30 días
+            ChartPeriod.Weekly => now.AddDays(-84),   // Últimas 12 semanas
+            ChartPeriod.Monthly => now.AddMonths(-12), // Últimos 12 meses
+            _ => now.AddMonths(-12)
+        };
+        
+        var histories = await _context.PriceHistories
+            .Include(h => h.Investment)
+            .Where(h => h.RecordedAt >= startDate)
+            .OrderBy(h => h.RecordedAt)
+            .ToListAsync();
+        
+        List<PerformanceData> data;
+        
+        switch (period)
+        {
+            case ChartPeriod.Daily:
+                data = histories
+                    .GroupBy(h => h.Day)
+                    .Select(g => new PerformanceData
+                    {
+                        Period = g.Key,
+                        Date = DateTime.Parse(g.Key),
+                        TotalValue = g.Sum(h => h.Price * (h.Investment?.Quantity ?? 0))
+                    })
+                    .OrderBy(p => p.Date)
+                    .ToList();
+                break;
+                
+            case ChartPeriod.Weekly:
+                data = histories
+                    .GroupBy(h => h.Week)
+                    .Select(g => new PerformanceData
+                    {
+                        Period = g.Key,
+                        Date = g.Min(h => h.RecordedAt),
+                        TotalValue = g.Sum(h => h.Price * (h.Investment?.Quantity ?? 0))
+                    })
+                    .OrderBy(p => p.Date)
+                    .ToList();
+                break;
+                
+            case ChartPeriod.Monthly:
+            default:
+                data = histories
+                    .GroupBy(h => h.Month)
+                    .Select(g => new PerformanceData
+                    {
+                        Period = g.Key,
+                        Date = DateTime.Parse(g.Key + "-01"),
+                        TotalValue = g.Sum(h => h.Price * (h.Investment?.Quantity ?? 0))
+                    })
+                    .OrderBy(p => p.Date)
+                    .ToList();
+                break;
+        }
+        
+        return data;
+    }
+    
+    /// <summary>
+    /// Obtiene el rendimiento por mes (método legacy mantenido para compatibilidad)
     /// </summary>
     public async Task<List<MonthlyPerformance>> GetMonthlyPerformanceAsync()
     {
@@ -260,5 +418,12 @@ public class PortfolioSummary
 public class MonthlyPerformance
 {
     public string Month { get; set; } = string.Empty;
+    public decimal TotalValue { get; set; }
+}
+
+public class PerformanceData
+{
+    public string Period { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public decimal TotalValue { get; set; }
 }

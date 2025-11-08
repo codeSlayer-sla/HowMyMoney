@@ -9,9 +9,11 @@ public class ProfitColorConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
+        
         if (value is decimal profitLoss)
         {
             if (profitLoss > 0)
+
                 return new SolidColorBrush(Color.Parse("#27AE60")); // Verde
             else if (profitLoss < 0)
                 return new SolidColorBrush(Color.Parse("#E74C3C")); // Rojo

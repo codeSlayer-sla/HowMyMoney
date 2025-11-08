@@ -19,10 +19,15 @@ public partial class AddInvestmentViewModel : ViewModelBase
     private string _name = string.Empty;
     
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSkinAsset), nameof(IsNotSkinAsset))]
     private AssetType _selectedAssetType = AssetType.Criptomoneda;
     
     [ObservableProperty]
     private string _symbol = string.Empty;
+    
+    // Propiedades computadas para visibilidad de controles
+    public bool IsSkinAsset => SelectedAssetType == AssetType.SkinCSGO;
+    public bool IsNotSkinAsset => SelectedAssetType != AssetType.SkinCSGO;
     
     // Se ejecuta cuando cambia el tipo de activo
     partial void OnSelectedAssetTypeChanged(AssetType value)
@@ -31,6 +36,12 @@ public partial class AddInvestmentViewModel : ViewModelBase
         SearchResults.Clear();
         StatusMessage = $"Tipo de activo cambiado a: {value}";
         Console.WriteLine($"DEBUG: Tipo de activo cambiado a {value}");
+        
+        // Ajustar cantidad a entero si es skin
+        if (value == AssetType.SkinCSGO && Quantity != Math.Floor(Quantity))
+        {
+            Quantity = Math.Floor(Quantity);
+        }
     }
     
     [ObservableProperty]

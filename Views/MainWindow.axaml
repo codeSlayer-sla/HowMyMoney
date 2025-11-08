@@ -4,6 +4,7 @@
         xmlns:views="using:HowsMyMoney.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialIcons="using:Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="HowsMyMoney.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -18,93 +19,172 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="240"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar de navegación -->
-        <Border Grid.Column="0" Background="#1E1E1E" Padding="20">
-            <StackPanel Spacing="15">
+        <!-- Sidebar de navegación (oculto durante splash) -->
+        <Border Grid.Column="0" Padding="0"
+                IsVisible="{Binding !ShowingSplash}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#1A1A1D" Offset="0"/>
+                    <GradientStop Color="#0F0F12" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            
+            <DockPanel LastChildFill="True">
                 <!-- Logo/Header -->
-                <Border Background="#007ACC" 
+                <Border DockPanel.Dock="Top" Margin="20,25,20,35">
+                    <StackPanel Spacing="12">
+                        <!-- Icono principal -->
+                        <Border Width="70" Height="70"
+                               CornerRadius="35"
+                               HorizontalAlignment="Center"
+                               BoxShadow="0 4 16 0 #60000000">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="#007ACC" Offset="0"/>
+                                    <GradientStop Color="#00AAFF" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <materialIcons:MaterialIcon Kind="CurrencyUsd" 
+                                                       Width="40" Height="40" 
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                        </Border>
+                        
+                        <!-- Nombre de la app -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="HowsMyMoney" 
+                                      FontSize="20" 
+                                      FontWeight="Bold" 
+                                      Foreground="White"
+                                      HorizontalAlignment="Center"
+                                      TextWrapping="NoWrap"/>
+                            <TextBlock Text="Gestor de Inversiones" 
+                                      FontSize="10" 
+                                      Foreground="#B0B0B0"
+                                      HorizontalAlignment="Center"
+                                      TextWrapping="Wrap"
+                                      TextAlignment="Center"
+                                      MaxWidth="180"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Navigation Buttons -->
+                <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="20,0">
+                    <!-- Dashboard Button -->
+                    <Button Command="{Binding ShowDashboardCommand}"
+                           HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Left"
+                           Padding="18,16"
+                           Background="#252529"
+                           Foreground="White"
+                           BorderThickness="0"
+                           CornerRadius="12"
+                           Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="14">
+                            <materialIcons:MaterialIcon Kind="ViewDashboard" 
+                                                       Width="24" Height="24"/>
+                            <TextBlock Text="Dashboard" 
+                                      FontSize="15" 
+                                      FontWeight="SemiBold"
+                                      VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#007ACC"/>
+                                <Setter Property="RenderTransform">
+                                    <TranslateTransform X="4"/>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#005A9E"/>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+                            </Transitions>
+                        </Button.Transitions>
+                    </Button>
+                    
+                    <!-- Add Investment Button -->
+                    <Button Command="{Binding ShowAddInvestmentCommand}"
+                           HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Left"
+                           Padding="18,16"
+                           Background="#252529"
+                           Foreground="White"
+                           BorderThickness="0"
+                           CornerRadius="12"
+                           Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="14">
+                            <materialIcons:MaterialIcon Kind="PlusCircle" 
+                                                       Width="24" Height="24"/>
+                            <TextBlock Text="Nueva Inversión" 
+                                      FontSize="15" 
+                                      FontWeight="SemiBold"
+                                      VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#16C60C"/>
+                                <Setter Property="RenderTransform">
+                                    <TranslateTransform X="4"/>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#13A10E"/>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+                            </Transitions>
+                        </Button.Transitions>
+                    </Button>
+                </StackPanel>
+                
+                <!-- Footer -->
+                <Border DockPanel.Dock="Bottom" 
+                       Background="#1C1C1E" 
                        CornerRadius="10" 
-                       Padding="15"
-                       Margin="0,0,0,25"
-                       BoxShadow="0 4 12 0 #40000000">
-                    <StackPanel Spacing="5">
-                        <TextBlock Text="💰 HowsMyMoney" 
-                                  FontSize="20" 
-                                  FontWeight="Bold" 
-                                  Foreground="White"
-                                  HorizontalAlignment="Center"/>
-                        <TextBlock Text="Gestor de Inversiones" 
-                                  FontSize="11" 
-                                  Foreground="White"
-                                  Opacity="0.85"
+                       Padding="14"
+                       Margin="20,0,20,25"
+                       BoxShadow="0 2 10 0 #40000000">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" 
+                                   HorizontalAlignment="Center" 
+                                   Spacing="8">
+                            <materialIcons:MaterialIcon Kind="CodeBraces" 
+                                                       Width="16" Height="16" 
+                                                       Foreground="#00AAFF"/>
+                            <TextBlock Text="v1.0.0" 
+                                      FontSize="12" 
+                                      Foreground="#8E8E93"
+                                      FontWeight="SemiBold"
+                                      VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="2024 © HowsMyMoney" 
+                                  FontSize="10" 
+                                  Foreground="#6E6E73"
                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
                 
-                <!-- Dashboard Button -->
-                <Button Content="📊 Dashboard" 
-                       Command="{Binding ShowDashboardCommand}"
-                       HorizontalAlignment="Stretch"
-                       HorizontalContentAlignment="Left"
-                       Padding="15,12"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Background="#2D2D30"
-                       Foreground="White"
-                       BorderThickness="0"
-                       CornerRadius="8">
-                    <Button.Styles>
-                        <Style Selector="Button:pointerover">
-                            <Setter Property="Background" Value="#007ACC"/>
-                        </Style>
-                        <Style Selector="Button:pressed">
-                            <Setter Property="Background" Value="#005A9E"/>
-                        </Style>
-                    </Button.Styles>
-                </Button>
-                
-                <!-- Add Investment Button -->
-                <Button Content="➕ Nueva Inversión" 
-                       Command="{Binding ShowAddInvestmentCommand}"
-                       HorizontalAlignment="Stretch"
-                       HorizontalContentAlignment="Left"
-                       Padding="15,12"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Background="#2D2D30"
-                       Foreground="White"
-                       BorderThickness="0"
-                       CornerRadius="8">
-                    <Button.Styles>
-                        <Style Selector="Button:pointerover">
-                            <Setter Property="Background" Value="#16C60C"/>
-                        </Style>
-                        <Style Selector="Button:pressed">
-                            <Setter Property="Background" Value="#13A10E"/>
-                        </Style>
-                    </Button.Styles>
-                </Button>
-                
-                <!-- Footer -->
-                <Border VerticalAlignment="Bottom" 
-                       Background="#252526" 
-                       CornerRadius="6" 
-                       Padding="10"
-                       Margin="0,30,0,0">
-                    <TextBlock Text="v1.0 - 2024" 
-                              FontSize="10" 
-                              Foreground="#95A5A6"
-                              HorizontalAlignment="Center"/>
-                </Border>
-            </StackPanel>
+                <!-- Spacer -->
+                <Border/>
+            </DockPanel>
         </Border>
 
-        <!-- Contenido principal -->
-        <Border Grid.Column="1" Background="#1E1E1E" Padding="0">
+        <!-- Contenido principal con fade-in -->
+        <Border Background="#1E1E1E" Padding="0"
+                Grid.Column="1"
+                IsVisible="{Binding !ShowingSplash}">
             <ContentControl Content="{Binding CurrentView}">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="vm:DashboardViewModel">
@@ -112,6 +192,19 @@
                     </DataTemplate>
                     <DataTemplate DataType="vm:AddInvestmentViewModel">
                         <views:AddInvestmentView/>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </Border>
+        
+        <!-- Splash Screen (pantalla completa) -->
+        <Border Grid.Column="0" Grid.ColumnSpan="2" 
+                Background="#0A0E27"
+                IsVisible="{Binding ShowingSplash}">
+            <ContentControl Content="{Binding CurrentView}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="vm:SplashViewModel">
+                        <views:SplashView/>
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>

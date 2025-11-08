@@ -260,6 +260,8 @@
                               FontWeight="SemiBold"
                               FontSize="15"
                               Foreground="#FFFFFF"/>
+                    
+                    <!-- Cantidad para Criptomonedas (decimales) -->
                     <NumericUpDown Value="{Binding Quantity}"
                                   Minimum="0.00000001"
                                   Maximum="1000000000"
@@ -270,7 +272,22 @@
                                   Background="#3C3C3C"
                                   BorderBrush="#6B6B6B"
                                   BorderThickness="2"
-                                  CornerRadius="8"/>
+                                  CornerRadius="8"
+                                  IsVisible="{Binding IsNotSkinAsset}"/>
+                    
+                    <!-- Cantidad para Skins (enteros) -->
+                    <NumericUpDown Value="{Binding Quantity}"
+                                  Minimum="1"
+                                  Maximum="1000000"
+                                  Increment="1"
+                                  FormatString="F0"
+                                  Padding="12"
+                                  FontSize="14"
+                                  Background="#3C3C3C"
+                                  BorderBrush="#6B6B6B"
+                                  BorderThickness="2"
+                                  CornerRadius="8"
+                                  IsVisible="{Binding IsSkinAsset}"/>
                 </StackPanel>
 
                 <!-- Precio de Compra -->

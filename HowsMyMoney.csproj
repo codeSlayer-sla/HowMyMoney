@@ -25,6 +25,8 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="Material.Avalonia" Version="3.13.3" />
+    <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
     
     <!-- Database -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.14" />
