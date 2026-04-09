@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using HowsMyMoney.Models;
 
 namespace HowsMyMoney.Services;
 
@@ -26,10 +27,10 @@ public class SkinportService
     }
     
     /// <summary>
-    /// Busca skins usando Steam Community Market API
+    /// Busca skins usando Steam Community Market API con filtro de categoría
     /// Retorna precios REALES actualizados
     /// </summary>
-    public async Task<List<SkinItem>> SearchSkinsAsync(string query)
+    public async Task<List<SkinItem>> SearchSkinsAsync(string query, SkinCategory category = SkinCategory.Todos)
     {
         try
         {
@@ -40,7 +41,7 @@ public class SkinportService
             }
             
             Console.WriteLine($"\n========== BUSCANDO EN STEAM MARKET ==========");
-            Console.WriteLine($"🔍 Búsqueda: '{query}'");
+            Console.WriteLine($"🔍 Búsqueda: '{query}' | Categoría: {category}");
             
             var results = new List<SkinItem>();
             
@@ -53,39 +54,89 @@ public class SkinportService
                 {
                     Console.WriteLine($"🔄 Probando término: '{searchTerm}'");
                     
-                    var url = $"https://steamcommunity.com/market/search/render/?appid={CSGO_APP_ID}&search_descriptions=0&query={Uri.EscapeDataString(searchTerm)}&count=10&norender=1";
-                    Console.WriteLine($"📡 URL: {url}");
+                    // PASO 1: Hacer consulta inicial para saber cuántos items hay disponibles
+                    var initialUrl = $"https://steamcommunity.com/market/search/render/?appid={CSGO_APP_ID}&search_descriptions=0&query={Uri.EscapeDataString(searchTerm)}&start=0&count=10&norender=1";
                     
-                    var response = await _httpClient.GetStringAsync(url);
+                    Console.WriteLine($"📡 Consultando Steam Market...");
+                    var initialResponse = await _httpClient.GetStringAsync(initialUrl);
+                    var initialResult = JsonSerializer.Deserialize<SteamMarketSearchResult>(initialResponse);
                     
-                    // Debug: mostrar los primeros 200 caracteres de la respuesta
-                    Console.WriteLine($"📄 Respuesta (primeros 200 chars): {response.Substring(0, Math.Min(200, response.Length))}");
-                    
-                    var searchResult = JsonSerializer.Deserialize<SteamMarketSearchResult>(response);
-                    
-                    if (searchResult?.Results != null && searchResult.Results.Any())
+                    if (initialResult?.Results == null || !initialResult.Results.Any())
                     {
-                        Console.WriteLine($"✓ Encontrados {searchResult.Results.Count} items en Steam Market");
+                        Console.WriteLine($"  ⚠ No se encontraron items para '{searchTerm}'");
+                        continue;
+                    }
+                    
+                    // PASO 2: Calcular cuántas páginas necesitamos traer
+                    var totalCount = initialResult.TotalCount;
+                    var itemsPerPage = 10; // Límite de Steam
+                    var maxItemsToGet = 50; // Límite que queremos traer
+                    var itemsToFetch = Math.Min(totalCount, maxItemsToGet);
+                    var totalPages = (int)Math.Ceiling((double)itemsToFetch / itemsPerPage);
+                    
+                    Console.WriteLine($"✓ Total disponible: {totalCount} items");
+                    Console.WriteLine($"📥 Descargando {itemsToFetch} items en {totalPages} páginas...");
+                    
+                    // PASO 3: Agregar los resultados de la primera página
+                    var allItems = new List<SteamMarketItem>();
+                    allItems.AddRange(initialResult.Results);
+                    Console.WriteLine($"  ✓ Página 1/{totalPages} - {initialResult.Results.Count} items");
+                    
+                    // PASO 4: Traer las páginas restantes
+                    for (int page = 1; page < totalPages; page++)
+                    {
+                        var start = page * itemsPerPage;
+                        var url = $"https://steamcommunity.com/market/search/render/?appid={CSGO_APP_ID}&search_descriptions=0&query={Uri.EscapeDataString(searchTerm)}&start={start}&count={itemsPerPage}&norender=1";
                         
-                        foreach (var item in searchResult.Results.Take(10))
+                        await Task.Delay(300); // Pausa entre requests para evitar rate limiting
+                        
+                        Console.WriteLine($"  📡 Página {page + 1}/{totalPages}...");
+                        
+                        var response = await _httpClient.GetStringAsync(url);
+                        var searchResult = JsonSerializer.Deserialize<SteamMarketSearchResult>(response);
+                        
+                        if (searchResult?.Results != null && searchResult.Results.Any())
                         {
-                            // Obtener precio real del item
+                            allItems.AddRange(searchResult.Results);
+                            Console.WriteLine($"  ✓ Página {page + 1}/{totalPages} - {searchResult.Results.Count} items");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"  ⚠ Página {page + 1} sin resultados");
+                            break;
+                        }
+                    }
+                    
+                    if (allItems.Any())
+                    {
+                        Console.WriteLine($"✓ Total descargado: {allItems.Count} items de Steam Market");
+                        Console.WriteLine($"⏳ Obteniendo precios (esto puede tomar unos segundos)...");
+                        
+                        // OBTENER PRECIOS CON RATE LIMITING (evitar bloqueos de Steam)
+                        var itemsToProcess = allItems.Take(50).ToList();
+                        var processedCount = 0;
+                        
+                        foreach (var item in itemsToProcess)
+                        {
+                            processedCount++;
+                            
+                            // Obtener URL de imagen primero
+                            string? imageUrl = null;
+                            if (item.AssetDescription?.IconUrlLarge != null)
+                            {
+                                imageUrl = $"https://community.cloudflare.steamstatic.com/economy/image/{item.AssetDescription.IconUrlLarge}";
+                            }
+                            else if (item.AssetDescription?.IconUrl != null)
+                            {
+                                imageUrl = $"https://community.cloudflare.steamstatic.com/economy/image/{item.AssetDescription.IconUrl}";
+                            }
+                            
+                            // Intentar obtener precio
                             var price = await GetRealPriceFromSteam(item.HashName);
                             
                             if (price.HasValue && price.Value > 0)
                             {
-                                Console.WriteLine($"  ✓ {item.HashName} - ${price.Value:F2}");
-                                
-                                // Obtener URL de imagen
-                                string? imageUrl = null;
-                                if (item.AssetDescription?.IconUrlLarge != null)
-                                {
-                                    imageUrl = $"https://community.cloudflare.steamstatic.com/economy/image/{item.AssetDescription.IconUrlLarge}";
-                                }
-                                else if (item.AssetDescription?.IconUrl != null)
-                                {
-                                    imageUrl = $"https://community.cloudflare.steamstatic.com/economy/image/{item.AssetDescription.IconUrl}";
-                                }
+                                Console.WriteLine($"  [{processedCount}/{itemsToProcess.Count}] ✓ {item.HashName} - ${price.Value:F2}");
                                 
                                 results.Add(new SkinItem
                                 {
@@ -100,11 +151,30 @@ public class SkinportService
                             }
                             else
                             {
-                                Console.WriteLine($"  ⚠ {item.HashName} - Sin precio disponible");
+                                // AGREGAR ITEM AUNQUE NO TENGA PRECIO (el usuario puede seleccionarlo y el precio se obtendrá al guardar)
+                                Console.WriteLine($"  [{processedCount}/{itemsToProcess.Count}] ⚠ {item.HashName} - Sin precio (se obtendrá al guardar)");
+                                
+                                results.Add(new SkinItem
+                                {
+                                    MarketHashName = item.HashName,
+                                    MinPrice = 0, // Precio temporal, se actualizará al guardar
+                                    MaxPrice = 0,
+                                    SuggestedPrice = 0,
+                                    AppId = CSGO_APP_ID,
+                                    GameName = "CS:GO",
+                                    ImageUrl = imageUrl
+                                });
                             }
                             
-                            // Pequeño delay para no saturar la API
-                            await Task.Delay(300);
+                            // Delay entre peticiones para evitar rate limiting (solo cada 5 items)
+                            if (processedCount % 5 == 0 && processedCount < itemsToProcess.Count)
+                            {
+                                await Task.Delay(1000); // 1 segundo cada 5 items
+                            }
+                            else
+                            {
+                                await Task.Delay(200); // 200ms entre items
+                            }
                         }
                         
                         if (results.Any())
@@ -123,6 +193,14 @@ public class SkinportService
                 {
                     Console.WriteLine($"  ✗ Error buscando '{searchTerm}': {ex.Message}");
                 }
+            }
+            
+            // FILTRAR POR CATEGORÍA después de obtener todos los resultados
+            if (category != SkinCategory.Todos && results.Any())
+            {
+                var beforeFilter = results.Count;
+                results = FilterByCategory(results, category);
+                Console.WriteLine($"🔍 Filtrado por categoría '{category}': {beforeFilter} → {results.Count} items");
             }
             
             if (!results.Any())
@@ -146,6 +224,110 @@ public class SkinportService
             Console.WriteLine($"✗ StackTrace: {ex.StackTrace}");
             return new List<SkinItem>();
         }
+    }
+    
+    /// <summary>
+    /// Filtra los resultados por categoría basándose en el nombre del item
+    /// </summary>
+    private List<SkinItem> FilterByCategory(List<SkinItem> items, SkinCategory category)
+    {
+        return category switch
+        {
+            SkinCategory.Arma => items.Where(i => 
+                !i.MarketHashName.Contains("★") && // No items especiales (cuchillos/guantes tienen ★)
+                !i.MarketHashName.Contains("Sticker") &&
+                !i.MarketHashName.Contains("Sealed Graffiti") &&
+                !i.MarketHashName.Contains("Music Kit") &&
+                !i.MarketHashName.Contains("Patch") &&
+                !i.MarketHashName.Contains("Case") &&
+                !i.MarketHashName.Contains("Key") &&
+                !i.MarketHashName.Contains("Pin") &&
+                !i.MarketHashName.Contains("Capsule") &&
+                !i.MarketHashName.Contains("Package") &&
+                !i.MarketHashName.Contains("Autograph") &&
+                !i.MarketHashName.Contains("Souvenir") &&
+                (i.MarketHashName.Contains("AK-47") ||
+                 i.MarketHashName.Contains("M4A4") ||
+                 i.MarketHashName.Contains("M4A1-S") ||
+                 i.MarketHashName.Contains("AWP") ||
+                 i.MarketHashName.Contains("Desert Eagle") ||
+                 i.MarketHashName.Contains("USP-S") ||
+                 i.MarketHashName.Contains("Glock-18") ||
+                 i.MarketHashName.Contains("P250") ||
+                 i.MarketHashName.Contains("Five-SeveN") ||
+                 i.MarketHashName.Contains("Tec-9") ||
+                 i.MarketHashName.Contains("CZ75-Auto") ||
+                 i.MarketHashName.Contains("P2000") ||
+                 i.MarketHashName.Contains("Dual Berettas") ||
+                 i.MarketHashName.Contains("R8 Revolver") ||
+                 i.MarketHashName.Contains("MP9") ||
+                 i.MarketHashName.Contains("MAC-10") ||
+                 i.MarketHashName.Contains("MP7") ||
+                 i.MarketHashName.Contains("MP5-SD") ||
+                 i.MarketHashName.Contains("UMP-45") ||
+                 i.MarketHashName.Contains("P90") ||
+                 i.MarketHashName.Contains("PP-Bizon") ||
+                 i.MarketHashName.Contains("Galil AR") ||
+                 i.MarketHashName.Contains("FAMAS") ||
+                 i.MarketHashName.Contains("AUG") ||
+                 i.MarketHashName.Contains("SG 553") ||
+                 i.MarketHashName.Contains("SSG 08") ||
+                 i.MarketHashName.Contains("SCAR-20") ||
+                 i.MarketHashName.Contains("G3SG1") ||
+                 i.MarketHashName.Contains("Nova") ||
+                 i.MarketHashName.Contains("XM1014") ||
+                 i.MarketHashName.Contains("MAG-7") ||
+                 i.MarketHashName.Contains("Sawed-Off") ||
+                 i.MarketHashName.Contains("M249") ||
+                 i.MarketHashName.Contains("Negev"))
+            ).ToList(),
+            
+            SkinCategory.Cuchillo => items.Where(i => 
+                i.MarketHashName.Contains("★") && 
+                (i.MarketHashName.Contains("Knife") || 
+                 i.MarketHashName.Contains("Karambit") ||
+                 i.MarketHashName.Contains("Bayonet") ||
+                 i.MarketHashName.Contains("Butterfly") ||
+                 i.MarketHashName.Contains("Daggers") ||
+                 i.MarketHashName.Contains("Bowie"))
+            ).ToList(),
+            
+            SkinCategory.Guantes => items.Where(i => 
+                i.MarketHashName.Contains("★") && i.MarketHashName.Contains("Gloves")
+            ).ToList(),
+            
+            SkinCategory.Agente => items.Where(i => 
+                i.MarketHashName.Contains("Agent") || i.MarketHashName.Contains("The ")
+            ).ToList(),
+            
+            SkinCategory.Sticker => items.Where(i => 
+                i.MarketHashName.Contains("Sticker") && !i.MarketHashName.Contains("Capsule")
+            ).ToList(),
+            
+            SkinCategory.Graffiti => items.Where(i => 
+                i.MarketHashName.Contains("Sealed Graffiti")
+            ).ToList(),
+            
+            SkinCategory.Musica => items.Where(i => 
+                i.MarketHashName.Contains("Music Kit")
+            ).ToList(),
+            
+            SkinCategory.Parche => items.Where(i => 
+                i.MarketHashName.Contains("Patch")
+            ).ToList(),
+            
+            SkinCategory.Caja => items.Where(i => 
+                i.MarketHashName.Contains("Case") || i.MarketHashName.Contains("Package")
+            ).ToList(),
+            
+            SkinCategory.Llave => items.Where(i => 
+                i.MarketHashName.Contains("Key") && !i.MarketHashName.Contains("Capsule Key")
+            ).ToList(),
+            
+            SkinCategory.Todos => items,
+            
+            _ => items
+        };
     }
     
     /// <summary>
@@ -195,6 +377,14 @@ public class SkinportService
             var url = $"https://steamcommunity.com/market/priceoverview/?appid={CSGO_APP_ID}&currency=1&market_hash_name={Uri.EscapeDataString(marketHashName)}";
             
             var response = await _httpClient.GetStringAsync(url);
+            
+            // Debug: Ver respuesta de Steam
+            if (string.IsNullOrEmpty(response) || response.Contains("null"))
+            {
+                // Item muy raro o sin ventas recientes
+                return null;
+            }
+            
             var priceData = JsonSerializer.Deserialize<SteamPriceOverview>(response);
             
             if (priceData?.Success == true && !string.IsNullOrEmpty(priceData.LowestPrice))
@@ -211,11 +401,28 @@ public class SkinportService
                     return price;
                 }
             }
+            else if (priceData?.Success == false)
+            {
+                // Steam devolvió success: false (item sin precio o rate limit)
+                return null;
+            }
             
             return null;
         }
-        catch
+        catch (HttpRequestException ex)
         {
+            // Error de red o rate limiting
+            if (ex.Message.Contains("429"))
+            {
+                Console.WriteLine($"    ⏸ Rate limit alcanzado, esperando...");
+                await Task.Delay(2000); // Esperar 2 segundos
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            // Otro error
+            Console.WriteLine($"    ✗ Error obteniendo precio: {ex.Message}");
             return null;
         }
     }

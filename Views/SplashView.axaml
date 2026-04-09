@@ -54,13 +54,9 @@
                     <!-- Icono principal con efecto glow -->
                     <Border Width="160" Height="160"
                             CornerRadius="80"
-                            BoxShadow="0 0 60 20 #4000AAFF, 0 10 40 0 #80000000">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#007ACC" Offset="0"/>
-                                <GradientStop Color="#00AAFF" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
+                            ClipToBounds="True"
+                            BoxShadow="0 0 60 20 #4000AAFF, 0 10 40 0 #80000000"
+                            Background="#1A1A1D">
                         
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="{Binding LogoScale}" 
@@ -77,11 +73,12 @@
                             </Transitions>
                         </Border.Transitions>
                         
-                        <materialIcons:MaterialIcon Kind="CurrencyUsd" 
-                                                   Width="90" Height="90"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
+                        <!-- Imagen del icono -->
+                        <Image Source="/Assets/Money-removebg-preview.png"
+                               Width="140" Height="140"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
                     </Border>
                     
                     <!-- Nombre de la app -->

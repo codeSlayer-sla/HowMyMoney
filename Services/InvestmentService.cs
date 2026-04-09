@@ -16,12 +16,16 @@ public class InvestmentService
     private readonly InvestmentDbContext _context;
     private readonly CoinGeckoService _coinGeckoService;
     private readonly SkinportService _skinportService;
+    private readonly StockService _stockService;
+    private readonly ImageCacheService _imageCacheService;
     
     public InvestmentService()
     {
         _context = new InvestmentDbContext();
         _coinGeckoService = new CoinGeckoService();
         _skinportService = new SkinportService();
+        _stockService = new StockService();
+        _imageCacheService = new ImageCacheService();
         
         // Asegurar que la base de datos existe
         _context.Database.EnsureCreated();
@@ -134,6 +138,10 @@ public class InvestmentService
         {
             await UpdateSkinAssetAsync(investment, forceImageUpdate);
         }
+        else if (investment.AssetType == AssetType.Accion && !string.IsNullOrEmpty(investment.Symbol))
+        {
+            await UpdateStockAssetAsync(investment, forceImageUpdate);
+        }
     }
     
     /// <summary>
@@ -224,6 +232,131 @@ public class InvestmentService
                 Console.WriteLine($"✓ Precio actualizado: ${price.Value}");
             }
         }
+    }
+    
+    /// <summary>
+    /// Actualiza precio e imagen de acción
+    /// </summary>
+    private async Task UpdateStockAssetAsync(Investment investment, bool forceImageUpdate)
+    {
+        if (string.IsNullOrEmpty(investment.Symbol))
+        {
+            Console.WriteLine($"⚠ Acción sin símbolo: {investment.Name}");
+            return;
+        }
+        
+        Console.WriteLine($"Actualizando acción: {investment.Name} ({investment.Symbol})");
+        
+        var price = await _stockService.GetStockPriceAsync(investment.Symbol);
+        if (price.HasValue)
+        {
+            investment.CurrentPrice = price.Value;
+            Console.WriteLine($"✓ Precio actualizado: ${price.Value}");
+        }
+        else
+        {
+            Console.WriteLine($"⚠ No se pudo obtener precio para {investment.Symbol}");
+        }
+        
+        // Verificar si necesita descargar imagen
+        bool needsImageDownload = string.IsNullOrEmpty(investment.ImageUrl) || 
+                                   forceImageUpdate || 
+                                   await NeedsImageRedownload(investment.ImageUrl);
+        
+        if (needsImageDownload)
+        {
+            var domain = GetDomainFromSymbol(investment.Symbol);
+            var imageUrl = $"https://logo.clearbit.com/{domain}.com";
+            
+            Console.WriteLine($"📥 Descargando logo de acción: {imageUrl}");
+            
+            // Descargar y guardar la imagen en la base de datos usando ImageCacheService
+            var imageData = await _imageCacheService.GetImageAsync(imageUrl);
+            
+            if (imageData != null && imageData.Length > 0)
+            {
+                investment.ImageUrl = imageUrl;
+                Console.WriteLine($"✓ Logo descargado y guardado en DB: {imageUrl}");
+            }
+            else
+            {
+                // Si falla Clearbit, intentar con un logo genérico
+                Console.WriteLine($"⚠ No se pudo descargar logo de {domain}, usando icono genérico");
+                investment.ImageUrl = $"placeholder://stock/{investment.Symbol}";
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Verifica si una imagen necesita ser re-descargada
+    /// (por ejemplo, si la URL existe pero no está en caché)
+    /// </summary>
+    private async Task<bool> NeedsImageRedownload(string? imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl)) return true;
+
+        if (IsPlaceholderImageUrl(imageUrl)) return false;
+
+        // Solo consultar la caché, sin descargar ni tocar red
+        return !await _imageCacheService.IsCachedAsync(imageUrl);
+    }
+
+    private static bool IsPlaceholderImageUrl(string imageUrl)
+    {
+        return imageUrl.StartsWith("placeholder://", StringComparison.OrdinalIgnoreCase)
+               || imageUrl.Contains("via.placeholder.com", StringComparison.OrdinalIgnoreCase)
+               || imageUrl.Contains("placeholder.com", StringComparison.OrdinalIgnoreCase);
+    }
+    
+    /// <summary>
+    /// Obtiene el dominio web de una empresa basado en su símbolo
+    /// </summary>
+    private string GetDomainFromSymbol(string symbol)
+    {
+        return symbol.ToUpper() switch
+        {
+            // Tech
+            "AAPL" => "apple",
+            "MSFT" => "microsoft",
+            "GOOGL" or "GOOG" => "google",
+            "AMZN" => "amazon",
+            "META" or "FB" => "meta",
+            "TSLA" => "tesla",
+            "NVDA" => "nvidia",
+            "NFLX" => "netflix",
+            "AMD" => "amd",
+            "INTC" => "intel",
+            
+            // ETFs - Fondos más populares
+            "SPY" => "spdr",
+            "QQQ" => "invesco",
+            "VOO" => "vanguard",
+            "VTI" => "vanguard",
+            "IWM" => "ishares",
+            "DIA" => "spdr",
+            "VEA" => "vanguard",
+            "VWO" => "vanguard",
+            "AGG" => "ishares",
+            "BND" => "vanguard",
+            
+            // Finance
+            "JPM" => "jpmorganchase",
+            "BAC" => "bankofamerica",
+            "WFC" => "wellsfargo",
+            "GS" => "goldmansachs",
+            "V" => "visa",
+            "MA" => "mastercard",
+            
+            // Consumer
+            "KO" => "coca-cola",
+            "PEP" => "pepsi",
+            "WMT" => "walmart",
+            "DIS" => "disney",
+            "NKE" => "nike",
+            "MCD" => "mcdonalds",
+            
+            _ => symbol.ToLower()
+        };
     }
     
     /// <summary>

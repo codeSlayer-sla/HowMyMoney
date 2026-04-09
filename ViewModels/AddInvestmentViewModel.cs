@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +15,7 @@ public partial class AddInvestmentViewModel : ViewModelBase
     private readonly InvestmentService _investmentService;
     private readonly CoinGeckoService _coinGeckoService;
     private readonly SkinportService _skinportService;
+    private readonly StockService _stockService;
     
     [ObservableProperty]
     private string _name = string.Empty;
@@ -25,9 +27,14 @@ public partial class AddInvestmentViewModel : ViewModelBase
     [ObservableProperty]
     private string _symbol = string.Empty;
     
+    [ObservableProperty]
+    private SkinCategory _selectedSkinCategory = SkinCategory.Todos;
+    
     // Propiedades computadas para visibilidad de controles
     public bool IsSkinAsset => SelectedAssetType == AssetType.SkinCSGO;
     public bool IsNotSkinAsset => SelectedAssetType != AssetType.SkinCSGO;
+    
+    public List<SkinCategory> SkinCategories { get; } = Enum.GetValues<SkinCategory>().ToList();
     
     // Se ejecuta cuando cambia el tipo de activo
     partial void OnSelectedAssetTypeChanged(AssetType value)
@@ -72,8 +79,7 @@ public partial class AddInvestmentViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSearching;
     
-    [ObservableProperty]
-    private List<AssetSearchResult> _searchResults = new();
+    public ObservableCollection<AssetSearchResult> SearchResults { get; } = new();
     
     [ObservableProperty]
     private AssetSearchResult? _selectedSearchResult;
@@ -85,6 +91,7 @@ public partial class AddInvestmentViewModel : ViewModelBase
         _investmentService = new InvestmentService();
         _coinGeckoService = new CoinGeckoService();
         _skinportService = new SkinportService();
+        _stockService = new StockService();
     }
     
     [RelayCommand]
@@ -111,26 +118,46 @@ public partial class AddInvestmentViewModel : ViewModelBase
                 Console.WriteLine("DEBUG: Entrando a búsqueda de criptomonedas");
                 var coins = await _coinGeckoService.SearchCoinsAsync(Name);
                 
-                // Obtener precios para cada moneda
-                var searchResults = new List<AssetSearchResult>();
-                foreach (var coin in coins.Take(10)) // Limitar a 10 resultados
+                // Limpiar resultados anteriores
+                SearchResults.Clear();
+                
+                // OPTIMIZACIÓN: Obtener precios en lotes pequeños para evitar rate limiting
+                var coinsToProcess = coins.Take(15).ToList(); // Reducido a 15 para evitar rate limiting
+                var results = new List<AssetSearchResult>();
+                
+                // Procesar en lotes de 5 para no saturar la API
+                for (int i = 0; i < coinsToProcess.Count; i += 5)
                 {
-                    var price = await _coinGeckoService.GetCryptoPriceAsync(coin.Id);
-                    searchResults.Add(new AssetSearchResult
+                    var batch = coinsToProcess.Skip(i).Take(5);
+                    var batchTasks = batch.Select(async coin =>
                     {
-                        Name = coin.Name,
-                        Symbol = coin.Id, // Usamos el ID para después obtener el precio
-                        ImageUrl = coin.Large ?? coin.Thumb,
-                        CurrentPrice = price ?? 0,
-                        AssetType = AssetType.Criptomoneda
+                        var price = await _coinGeckoService.GetCryptoPriceAsync(coin.Id);
+                        return new AssetSearchResult
+                        {
+                            Name = coin.Name,
+                            Symbol = coin.Id,
+                            ImageUrl = coin.Large ?? coin.Thumb,
+                            CurrentPrice = price ?? 0,
+                            AssetType = AssetType.Criptomoneda
+                        };
                     });
+                    
+                    var batchResults = await Task.WhenAll(batchTasks);
+                    results.AddRange(batchResults);
+                    
+                    // Pequeña pausa entre lotes
+                    if (i + 5 < coinsToProcess.Count)
+                        await Task.Delay(200);
                 }
                 
-                SearchResults = searchResults;
-                
-                if (searchResults.Any())
+                foreach (var result in results)
                 {
-                    StatusMessage = $"✓ Se encontraron {searchResults.Count} criptomonedas. Selecciona una de la lista.";
+                    SearchResults.Add(result);
+                }
+                
+                if (SearchResults.Any())
+                {
+                    StatusMessage = $"✓ Se encontraron {SearchResults.Count} criptomonedas. Selecciona una de la lista.";
                 }
                 else
                 {
@@ -139,19 +166,25 @@ public partial class AddInvestmentViewModel : ViewModelBase
             }
             else if (SelectedAssetType == AssetType.SkinCSGO)
             {
-                Console.WriteLine("DEBUG: Entrando a búsqueda de skins CS:GO");
-                var skins = await _skinportService.SearchSkinsAsync(Name);
+                Console.WriteLine($"DEBUG: Entrando a búsqueda de skins CS:GO - Categoría: {SelectedSkinCategory}");
+                var skins = await _skinportService.SearchSkinsAsync(Name, SelectedSkinCategory);
                 Console.WriteLine($"DEBUG: Se encontraron {skins.Count} skins");
                 
+                // Limpiar resultados anteriores
+                SearchResults.Clear();
+                
                 // Convertir a AssetSearchResult con imágenes de Steam
-                SearchResults = skins.Select(s => new AssetSearchResult
+                foreach (var skin in skins)
                 {
-                    Name = s.MarketHashName,
-                    Symbol = s.MarketHashName,
-                    ImageUrl = s.ImageUrl,
-                    CurrentPrice = s.MinPrice,
-                    AssetType = AssetType.SkinCSGO
-                }).ToList();
+                    SearchResults.Add(new AssetSearchResult
+                    {
+                        Name = skin.MarketHashName,
+                        Symbol = skin.MarketHashName,
+                        ImageUrl = skin.ImageUrl,
+                        CurrentPrice = skin.MinPrice,
+                        AssetType = AssetType.SkinCSGO
+                    });
+                }
                 
                 if (skins.Any())
                 {
@@ -160,6 +193,30 @@ public partial class AddInvestmentViewModel : ViewModelBase
                 else
                 {
                     StatusMessage = "No se encontraron skins con ese nombre";
+                }
+            }
+            else if (SelectedAssetType == AssetType.Accion)
+            {
+                Console.WriteLine("DEBUG: Entrando a búsqueda de acciones");
+                var stocks = await _stockService.SearchStocksAsync(Name);
+                Console.WriteLine($"DEBUG: Se encontraron {stocks.Count} acciones");
+                
+                // Limpiar resultados anteriores
+                SearchResults.Clear();
+                
+                // Agregar los resultados de acciones
+                foreach (var stock in stocks)
+                {
+                    SearchResults.Add(stock);
+                }
+                
+                if (stocks.Any())
+                {
+                    StatusMessage = $"✓ Se encontraron {stocks.Count} acciones. Selecciona una de la lista.";
+                }
+                else
+                {
+                    StatusMessage = "No se encontraron acciones con ese nombre o símbolo";
                 }
             }
             else if (SelectedAssetType == AssetType.Manual)

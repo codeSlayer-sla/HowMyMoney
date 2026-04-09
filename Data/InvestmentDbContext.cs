@@ -13,6 +13,7 @@ public class InvestmentDbContext : DbContext
 {
     public DbSet<Investment> Investments { get; set; } = null!;
     public DbSet<PriceHistory> PriceHistories { get; set; } = null!;
+    public DbSet<ImageCache> ImageCaches { get; set; } = null!;
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -33,7 +34,7 @@ public class InvestmentDbContext : DbContext
     }
     
     /// <summary>
-    /// Migra la base de datos para agregar campos Day y Week si no existen
+    /// Migra la base de datos para agregar campos Day y Week si no existen, y crear tabla ImageCaches
     /// </summary>
     public void MigrateDatabaseSchema()
     {
@@ -43,19 +44,45 @@ public class InvestmentDbContext : DbContext
             connection.Open();
             using var command = connection.CreateCommand();
             
+            // Verificar si la tabla ImageCaches existe
+            command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='ImageCaches'";
+            var reader = command.ExecuteReader();
+            bool hasImageCachesTable = reader.Read();
+            reader.Close();
+            
+            if (!hasImageCachesTable)
+            {
+                Console.WriteLine("🔄 Creando tabla ImageCaches...");
+                command.CommandText = @"
+                    CREATE TABLE IF NOT EXISTS ImageCaches (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Url TEXT NOT NULL UNIQUE,
+                        ImageData BLOB NOT NULL,
+                        LastUpdated TEXT NOT NULL,
+                        ContentType TEXT NOT NULL
+                    )";
+                command.ExecuteNonQuery();
+                
+                // Crear índice en URL para búsquedas rápidas
+                command.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS IX_ImageCaches_Url ON ImageCaches (Url)";
+                command.ExecuteNonQuery();
+                
+                Console.WriteLine("✓ Tabla ImageCaches creada");
+            }
+            
             // Verificar si la columna Day existe
             command.CommandText = "PRAGMA table_info(PriceHistories)";
-            var reader = command.ExecuteReader();
+            var columnReader = command.ExecuteReader();
             bool hasDayColumn = false;
             bool hasWeekColumn = false;
             
-            while (reader.Read())
+            while (columnReader.Read())
             {
-                var columnName = reader.GetString(1);
+                var columnName = columnReader.GetString(1);
                 if (columnName == "Day") hasDayColumn = true;
                 if (columnName == "Week") hasWeekColumn = true;
             }
-            reader.Close();
+            columnReader.Close();
             
             // Agregar columnas si no existen
             if (!hasDayColumn)
@@ -131,6 +158,17 @@ public class InvestmentDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.InvestmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configurar ImageCache
+        modelBuilder.Entity<ImageCache>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Url).IsRequired().HasMaxLength(500);
+            entity.HasIndex(e => e.Url).IsUnique(); // Índice único en URL
+            entity.Property(e => e.ImageData).IsRequired();
+            entity.Property(e => e.LastUpdated).IsRequired();
+            entity.Property(e => e.ContentType).HasMaxLength(50);
         });
     }
 }

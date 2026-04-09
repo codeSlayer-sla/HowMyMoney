@@ -6,6 +6,10 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    
+    <!-- Iconos de la aplicación -->
+    <ApplicationIcon>Assets/favicon.ico</ApplicationIcon>
+    <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
   </PropertyGroup>
 
   <ItemGroup>

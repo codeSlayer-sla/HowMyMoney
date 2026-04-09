@@ -1,0 +1,394 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:HowsMyMoney.ViewModels"
+             xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="HowsMyMoney.Views.MarketMonitorView"
+             x:DataType="vm:MarketMonitorViewModel">
+    
+    <Grid Background="#0F1419">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header RESPONSIVO -->
+        <Border Grid.Row="0" 
+                Background="#1A1D23" 
+                BorderBrush="#2D3139" 
+                BorderThickness="0,0,0,1"
+                Padding="20,15">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Título -->
+                <TextBlock Grid.Row="0"
+                          Text="📊 Monitoreo de Mercados"
+                          FontSize="24"
+                          FontWeight="Bold"
+                          Foreground="White"
+                          Margin="0,0,0,8"/>
+                
+                <TextBlock Grid.Row="1"
+                          Text="Selecciona los mercados que deseas monitorear"
+                          FontSize="12"
+                          Foreground="#8E8E93"
+                          Margin="0,0,0,15"/>
+                
+                <!-- Botones con WrapPanel para responsive -->
+                <WrapPanel Grid.Row="2" Orientation="Horizontal">
+                    <!-- Crypto -->
+                    <Button Command="{Binding ToggleCryptoCommand}"
+                           Height="48"
+                           MinWidth="130"
+                           Margin="0,0,10,10"
+                           CornerRadius="12"
+                           Background="#1E1E1E"
+                           BorderBrush="#3B82F6"
+                           BorderThickness="2">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#2563EB"/>
+                                <Setter Property="RenderTransform">
+                                    <ScaleTransform ScaleX="1.03" ScaleY="1.03"/>
+                                </Setter>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                            </Transitions>
+                        </Button.Transitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:MaterialIcon Kind="CurrencyBtc" Width="20" Height="20" Foreground="#3B82F6"/>
+                            <TextBlock Text="Crypto" FontSize="13" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Stocks -->
+                    <Button Command="{Binding ToggleStocksCommand}"
+                           Height="48"
+                           MinWidth="130"
+                           Margin="0,0,10,10"
+                           CornerRadius="12"
+                           Background="#1E1E1E"
+                           BorderBrush="#10B981"
+                           BorderThickness="2">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#059669"/>
+                                <Setter Property="RenderTransform">
+                                    <ScaleTransform ScaleX="1.03" ScaleY="1.03"/>
+                                </Setter>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                            </Transitions>
+                        </Button.Transitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:MaterialIcon Kind="TrendingUp" Width="20" Height="20" Foreground="#10B981"/>
+                            <TextBlock Text="Stocks" FontSize="13" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- CS:GO -->
+                    <Button Command="{Binding ToggleSkinsCommand}"
+                           Height="48"
+                           MinWidth="130"
+                           Margin="0,0,10,10"
+                           CornerRadius="12"
+                           Background="#1E1E1E"
+                           BorderBrush="#F59E0B"
+                           BorderThickness="2">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#D97706"/>
+                                <Setter Property="RenderTransform">
+                                    <ScaleTransform ScaleX="1.03" ScaleY="1.03"/>
+                                </Setter>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                            </Transitions>
+                        </Button.Transitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:MaterialIcon Kind="Pistol" Width="20" Height="20" Foreground="#F59E0B"/>
+                            <TextBlock Text="CS:GO" FontSize="13" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Refresh -->
+                    <Button Command="{Binding RefreshMarketsCommand}"
+                           Width="48" Height="48"
+                           Margin="0,0,0,10"
+                           CornerRadius="12"
+                           Background="#1E1E1E">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#8B5CF6"/>
+                                <Setter Property="RenderTransform">
+                                    <RotateTransform Angle="90"/>
+                                </Setter>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3"/>
+                            </Transitions>
+                        </Button.Transitions>
+                        <icons:MaterialIcon Kind="Refresh" Width="22" Height="22" Foreground="White"/>
+                    </Button>
+                </WrapPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Área de paneles con UniformGrid RESPONSIVO -->
+        <ScrollViewer Grid.Row="1" Padding="15">
+            <!-- WrapPanel automático para responsividad -->
+            <WrapPanel Orientation="Horizontal">
+                <!-- Panel Crypto -->
+                <Border IsVisible="{Binding IsCryptoEnabled}"
+                       Background="#1A1D23"
+                       CornerRadius="16"
+                       BorderBrush="#2D3139"
+                       BorderThickness="1"
+                       Margin="5"
+                       Width="450"
+                       MinHeight="500">
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <!-- Header -->
+                        <Border Grid.Row="0" 
+                               Background="#252529" 
+                               CornerRadius="16,16,0,0"
+                               Padding="15,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                    <Ellipse Width="10" Height="10" Fill="#3B82F6">
+                                        <Ellipse.Styles>
+                                            <Style Selector="Ellipse">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1.5" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                        <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.3"/></KeyFrame>
+                                                        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Ellipse.Styles>
+                                    </Ellipse>
+                                    <icons:MaterialIcon Kind="CurrencyBtc" Width="18" Height="18" Foreground="#3B82F6"/>
+                                    <TextBlock Text="Criptomonedas" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <TextBlock Grid.Column="1"
+                                          Text="{Binding CryptoMarkets.Count, StringFormat='Top {0}'}"
+                                          FontSize="11"
+                                          Foreground="#8E8E93"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"/>
+                                
+                                <Button Grid.Column="2"
+                                       Command="{Binding ToggleCryptoCommand}"
+                                       Width="28" Height="28"
+                                       CornerRadius="8"
+                                       Background="#2D2D30"
+                                       Padding="0">
+                                    <icons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="White"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Contenido con scroll -->
+                        <ScrollViewer Grid.Row="1" Padding="15">
+                            <ItemsControl ItemsSource="{Binding CryptoMarkets}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#252529"
+                                               CornerRadius="12"
+                                               Padding="14"
+                                               Margin="0,0,0,8">
+                                            <Border.Transitions>
+                                                <Transitions>
+                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                                                </Transitions>
+                                            </Border.Transitions>
+                                            <Border.Styles>
+                                                <Style Selector="Border:pointerover">
+                                                    <Setter Property="Background" Value="#2D2D30"/>
+                                                    <Setter Property="RenderTransform">
+                                                        <TranslateTransform X="3"/>
+                                                    </Setter>
+                                                </Style>
+                                            </Border.Styles>
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Border Grid.Column="0"
+                                                       Width="42" Height="42"
+                                                       CornerRadius="21"
+                                                       Background="#1E1E1E"
+                                                       Margin="0,0,12,0">
+                                                    <Image Source="{Binding ImageUrl}"
+                                                          Width="28" Height="28"/>
+                                                </Border>
+                                                
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}"
+                                                              FontSize="14"
+                                                              FontWeight="SemiBold"
+                                                              Foreground="White"/>
+                                                    <TextBlock Text="{Binding Symbol}"
+                                                              FontSize="11"
+                                                              Foreground="#8E8E93"/>
+                                                </StackPanel>
+                                                
+                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"
+                                                              FontSize="15"
+                                                              FontWeight="Bold"
+                                                              Foreground="White"
+                                                              HorizontalAlignment="Right"/>
+                                                    <TextBlock Text="{Binding ChangePercent24h, StringFormat='{}{0:+0.00;-0.00}%'}"
+                                                              FontSize="12"
+                                                              Foreground="#10B981"
+                                                              HorizontalAlignment="Right"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        
+                        <!-- Footer -->
+                        <Border Grid.Row="2"
+                               Background="#252529"
+                               CornerRadius="0,0,16,16"
+                               Padding="15,10">
+                            <TextBlock Text="{Binding LastUpdate, StringFormat='Actualizado: {0:HH:mm:ss}'}"
+                                      FontSize="10"
+                                      Foreground="#6B7280"
+                                      HorizontalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+                
+                <!-- Panel Stocks -->
+                <Border IsVisible="{Binding IsStocksEnabled}"
+                       Background="#1A1D23"
+                       CornerRadius="16"
+                       BorderBrush="#2D3139"
+                       BorderThickness="1"
+                       Margin="5"
+                       Width="450"
+                       MinHeight="500">
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <Border Grid.Row="0" Background="#252529" CornerRadius="16,16,0,0" Padding="15,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                    <Ellipse Width="10" Height="10" Fill="#10B981">
+                                        <Ellipse.Styles>
+                                            <Style Selector="Ellipse">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1.5" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                        <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.3"/></KeyFrame>
+                                                        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Ellipse.Styles>
+                                    </Ellipse>
+                                    <icons:MaterialIcon Kind="TrendingUp" Width="18" Height="18" Foreground="#10B981"/>
+                                    <TextBlock Text="Acciones" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="Próximamente" FontSize="11" Foreground="#8E8E93" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <Button Grid.Column="2" Command="{Binding ToggleStocksCommand}" Width="28" Height="28" CornerRadius="8" Background="#2D2D30" Padding="0">
+                                    <icons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="White"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                            <icons:MaterialIcon Kind="ChartLine" Width="64" Height="64" Foreground="#4B5563"/>
+                            <TextBlock Text="Top 10 Acciones" FontSize="16" FontWeight="Bold" Foreground="#9CA3AF" HorizontalAlignment="Center"/>
+                            <TextBlock Text="NYSE/NASDAQ" FontSize="13" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <Border Grid.Row="2" Background="#252529" CornerRadius="0,0,16,16" Padding="15,10">
+                            <TextBlock Text="{Binding LastUpdate, StringFormat='Actualizado: {0:HH:mm:ss}'}" FontSize="10" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+                
+                <!-- Panel CS:GO -->
+                <Border IsVisible="{Binding IsSkinsEnabled}"
+                       Background="#1A1D23"
+                       CornerRadius="16"
+                       BorderBrush="#2D3139"
+                       BorderThickness="1"
+                       Margin="5"
+                       Width="450"
+                       MinHeight="500">
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <Border Grid.Row="0" Background="#252529" CornerRadius="16,16,0,0" Padding="15,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                    <Ellipse Width="10" Height="10" Fill="#F59E0B">
+                                        <Ellipse.Styles>
+                                            <Style Selector="Ellipse">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1.5" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                        <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.3"/></KeyFrame>
+                                                        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Ellipse.Styles>
+                                    </Ellipse>
+                                    <icons:MaterialIcon Kind="Pistol" Width="18" Height="18" Foreground="#F59E0B"/>
+                                    <TextBlock Text="CS:GO Skins" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="Próximamente" FontSize="11" Foreground="#8E8E93" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <Button Grid.Column="2" Command="{Binding ToggleSkinsCommand}" Width="28" Height="28" CornerRadius="8" Background="#2D2D30" Padding="0">
+                                    <icons:MaterialIcon Kind="Close" Width="14" Height="14" Foreground="White"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                            <icons:MaterialIcon Kind="Steam" Width="64" Height="64" Foreground="#4B5563"/>
+                            <TextBlock Text="Top Skins CS:GO" FontSize="16" FontWeight="Bold" Foreground="#9CA3AF" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Steam Market" FontSize="13" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <Border Grid.Row="2" Background="#252529" CornerRadius="0,0,16,16" Padding="15,10">
+                            <TextBlock Text="{Binding LastUpdate, StringFormat='Actualizado: {0:HH:mm:ss}'}" FontSize="10" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+            </WrapPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

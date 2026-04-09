@@ -2,16 +2,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:HowsMyMoney.ViewModels"
         xmlns:views="using:HowsMyMoney.Views"
+        xmlns:converters="using:HowsMyMoney.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialIcons="using:Material.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="HowsMyMoney.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/Money-removebg-preview.png"
         Title="HowsMyMoney - Gestor de Inversiones"
         Width="1200" Height="700"
         WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <converters:BoolToWidthConverter x:Key="BoolToWidthConverter"/>
+        <converters:BoolToIconSizeConverter x:Key="BoolToIconSizeConverter"/>
+        <converters:BoolToMenuIconConverter x:Key="BoolToMenuIconConverter"/>
+    </Window.Resources>
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -19,13 +26,21 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar de navegación (oculto durante splash) -->
+        <!-- Sidebar de navegación (oculto durante splash y login) -->
         <Border Grid.Column="0" Padding="0"
-                IsVisible="{Binding !ShowingSplash}">
+                Width="{Binding IsSidebarCollapsed, Converter={StaticResource BoolToWidthConverter}}"
+                IsVisible="{Binding IsAuthenticated}"
+                Opacity="{Binding DashboardOpacity}">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.25" Easing="CubicEaseInOut"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
+                </Transitions>
+            </Border.Transitions>
             <Border.Background>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                     <GradientStop Color="#1A1A1D" Offset="0"/>
@@ -38,7 +53,8 @@
                 <Border DockPanel.Dock="Top" Margin="20,25,20,35">
                     <StackPanel Spacing="12">
                         <!-- Icono principal -->
-                        <Border Width="70" Height="70"
+                        <Border Width="{Binding IsSidebarCollapsed, Converter={StaticResource BoolToIconSizeConverter}}" 
+                               Height="{Binding IsSidebarCollapsed, Converter={StaticResource BoolToIconSizeConverter}}"
                                CornerRadius="35"
                                HorizontalAlignment="Center"
                                BoxShadow="0 4 16 0 #60000000">
@@ -55,8 +71,8 @@
                                                        VerticalAlignment="Center"/>
                         </Border>
                         
-                        <!-- Nombre de la app -->
-                        <StackPanel Spacing="4">
+                        <!-- Nombre de la app (oculto cuando está colapsado) -->
+                        <StackPanel Spacing="4" IsVisible="{Binding !IsSidebarCollapsed}">
                             <TextBlock Text="HowsMyMoney" 
                                       FontSize="20" 
                                       FontWeight="Bold" 
@@ -74,26 +90,55 @@
                     </StackPanel>
                 </Border>
                 
+                <!-- Toggle Button -->
+                <Border DockPanel.Dock="Top" Margin="10,0,10,20">
+                    <Button Command="{Binding ToggleSidebarCommand}"
+                           HorizontalAlignment="Center"
+                           Padding="12"
+                           Background="#1C1C1E"
+                           Foreground="White"
+                           BorderThickness="0"
+                           CornerRadius="10"
+                           Cursor="Hand">
+                        <materialIcons:MaterialIcon Kind="{Binding IsSidebarCollapsed, Converter={StaticResource BoolToMenuIconConverter}}" 
+                                                   Width="20" Height="20"/>
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#007ACC"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                </Border>
+                
                 <!-- Navigation Buttons -->
-                <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="20,0">
+                <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="10,0">
                     <!-- Dashboard Button -->
                     <Button Command="{Binding ShowDashboardCommand}"
                            HorizontalAlignment="Stretch"
-                           HorizontalContentAlignment="Left"
                            Padding="18,16"
                            Background="#252529"
                            Foreground="White"
                            BorderThickness="0"
                            CornerRadius="12"
-                           Cursor="Hand">
-                        <StackPanel Orientation="Horizontal" Spacing="14">
+                           Cursor="Hand"
+                           ToolTip.Tip="Dashboard">
+                        <Grid>
                             <materialIcons:MaterialIcon Kind="ViewDashboard" 
-                                                       Width="24" Height="24"/>
-                            <TextBlock Text="Dashboard" 
-                                      FontSize="15" 
-                                      FontWeight="SemiBold"
-                                      VerticalAlignment="Center"/>
-                        </StackPanel>
+                                                       Width="24" Height="24"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       IsVisible="{Binding IsSidebarCollapsed}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="14"
+                                       IsVisible="{Binding !IsSidebarCollapsed}">
+                                <materialIcons:MaterialIcon Kind="ViewDashboard" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="Dashboard" 
+                                          FontSize="15" 
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
                         <Button.Styles>
                             <Style Selector="Button:pointerover">
                                 <Setter Property="Background" Value="#007ACC"/>
@@ -115,21 +160,30 @@
                     <!-- Add Investment Button -->
                     <Button Command="{Binding ShowAddInvestmentCommand}"
                            HorizontalAlignment="Stretch"
-                           HorizontalContentAlignment="Left"
                            Padding="18,16"
                            Background="#252529"
                            Foreground="White"
                            BorderThickness="0"
                            CornerRadius="12"
-                           Cursor="Hand">
-                        <StackPanel Orientation="Horizontal" Spacing="14">
+                           Cursor="Hand"
+                           ToolTip.Tip="Nueva Inversión">
+                        <Grid>
                             <materialIcons:MaterialIcon Kind="PlusCircle" 
-                                                       Width="24" Height="24"/>
-                            <TextBlock Text="Nueva Inversión" 
-                                      FontSize="15" 
-                                      FontWeight="SemiBold"
-                                      VerticalAlignment="Center"/>
-                        </StackPanel>
+                                                       Width="24" Height="24"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       IsVisible="{Binding IsSidebarCollapsed}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="14"
+                                       IsVisible="{Binding !IsSidebarCollapsed}">
+                                <materialIcons:MaterialIcon Kind="PlusCircle" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="Nueva Inversión" 
+                                          FontSize="15" 
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
                         <Button.Styles>
                             <Style Selector="Button:pointerover">
                                 <Setter Property="Background" Value="#16C60C"/>
@@ -139,6 +193,51 @@
                             </Style>
                             <Style Selector="Button:pressed">
                                 <Setter Property="Background" Value="#13A10E"/>
+                            </Style>
+                        </Button.Styles>
+                        <Button.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+                            </Transitions>
+                        </Button.Transitions>
+                    </Button>
+                    
+                    <!-- Botón Monitoreo -->
+                    <Button Command="{Binding ShowMarketMonitorCommand}"
+                           HorizontalAlignment="Stretch"
+                           Padding="18,16"
+                           Background="#252529"
+                           Foreground="White"
+                           BorderThickness="0"
+                           CornerRadius="12"
+                           Cursor="Hand"
+                           ToolTip.Tip="Monitoreo de Mercados">
+                        <Grid>
+                            <materialIcons:MaterialIcon Kind="MonitorDashboard" 
+                                                       Width="24" Height="24"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       IsVisible="{Binding IsSidebarCollapsed}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="14"
+                                       IsVisible="{Binding !IsSidebarCollapsed}">
+                                <materialIcons:MaterialIcon Kind="MonitorDashboard" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="Monitoreo" 
+                                          FontSize="15" 
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#8B5CF6"/>
+                                <Setter Property="RenderTransform">
+                                    <TranslateTransform X="4"/>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#6D28D9"/>
                             </Style>
                         </Button.Styles>
                         <Button.Transitions>
@@ -184,7 +283,13 @@
         <!-- Contenido principal con fade-in -->
         <Border Background="#1E1E1E" Padding="0"
                 Grid.Column="1"
-                IsVisible="{Binding !ShowingSplash}">
+                IsVisible="{Binding IsAuthenticated}"
+                Opacity="{Binding DashboardOpacity}">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
+                </Transitions>
+            </Border.Transitions>
             <ContentControl Content="{Binding CurrentView}">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="vm:DashboardViewModel">
@@ -192,6 +297,28 @@
                     </DataTemplate>
                     <DataTemplate DataType="vm:AddInvestmentViewModel">
                         <views:AddInvestmentView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="vm:MarketMonitorViewModel">
+                        <views:MarketMonitorView/>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </Border>
+        
+        <!-- Login Screen (pantalla completa) -->
+        <Border Grid.Column="0" Grid.ColumnSpan="2" 
+                Background="#0F1419"
+                IsVisible="{Binding ShowingLogin}"
+                Opacity="{Binding LoginOpacity}">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
+                </Transitions>
+            </Border.Transitions>
+            <ContentControl Content="{Binding CurrentView}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="vm:LoginViewModel">
+                        <views:LoginView/>
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>

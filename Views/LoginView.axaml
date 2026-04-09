@@ -1,0 +1,276 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:HowsMyMoney.ViewModels"
+             xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="HowsMyMoney.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+    
+    <UserControl.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="#4B4B4F"/>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Background con gradiente -->
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#0F1419" Offset="0"/>
+                <GradientStop Color="#1A1D23" Offset="0.5"/>
+                <GradientStop Color="#0F1419" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <!-- Elementos decorativos de fondo -->
+        <Canvas>
+            <Ellipse Width="400" Height="400" 
+                    Canvas.Left="-150" Canvas.Top="-150"
+                    Fill="#3B82F620" 
+                    IsHitTestVisible="False"/>
+            <Ellipse Width="300" Height="300" 
+                    Canvas.Right="-100" Canvas.Bottom="-100"
+                    Fill="#10B98120" 
+                    IsHitTestVisible="False"/>
+        </Canvas>
+
+        <!-- Login Card -->
+        <Border Width="420" Height="520"
+               Background="#1E1E1E"
+               CornerRadius="16"
+               BoxShadow="0 20 60 0 #00000050"
+               BorderBrush="#2D2D30"
+               BorderThickness="1">
+            
+            <Grid RowDefinitions="Auto,*,Auto" Margin="40">
+                
+                <!-- Logo y título -->
+                <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,30">
+                    <Border Width="80" Height="80"
+                           Background="#3B82F6"
+                           CornerRadius="40"
+                           HorizontalAlignment="Center">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#3B82F6" BlurRadius="20" Opacity="0.5"/>
+                        </Border.Effect>
+                        <icons:MaterialIcon Kind="ChartLine" 
+                                          Width="44" Height="44"
+                                          Foreground="White"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <TextBlock Text="HowsMyMoney"
+                              FontSize="28"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              HorizontalAlignment="Center"
+                              LetterSpacing="0.5"/>
+                    
+                    <TextBlock Text="Gestiona tus inversiones"
+                              FontSize="14"
+                              Foreground="#8E8E93"
+                              HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Formulario -->
+                <StackPanel Grid.Row="1" Spacing="20" VerticalAlignment="Center">
+                    
+                    <!-- Username Field -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Usuario"
+                                  FontSize="13"
+                                  FontWeight="Medium"
+                                  Foreground="#AAAAAA"/>
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0"
+                                   Background="#2D2D30"
+                                   CornerRadius="8,0,0,8"
+                                   BorderBrush="#3E3E42"
+                                   BorderThickness="1,1,0,1"
+                                   Padding="12,10"
+                                   VerticalAlignment="Stretch">
+                                <icons:MaterialIcon Kind="Account" 
+                                                  Width="20" Height="20"
+                                                  Foreground="#8E8E93"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBox Grid.Column="1"
+                                    Text="{Binding Username}"
+                                    Watermark="Ingresa tu usuario"
+                                    CornerRadius="0,8,8,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Password Field -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Contraseña"
+                                  FontSize="13"
+                                  FontWeight="Medium"
+                                  Foreground="#AAAAAA"/>
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0"
+                                   Background="#2D2D30"
+                                   CornerRadius="8,0,0,8"
+                                   BorderBrush="#3E3E42"
+                                   BorderThickness="1,1,0,1"
+                                   Padding="12,10"
+                                   VerticalAlignment="Stretch">
+                                <icons:MaterialIcon Kind="Lock" 
+                                                  Width="20" Height="20"
+                                                  Foreground="#8E8E93"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBox Grid.Column="1"
+                                    Text="{Binding Password}"
+                                    Watermark="Ingresa tu contraseña"
+                                    PasswordChar="●"
+                                    CornerRadius="0,8,8,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Error Message -->
+                    <Border Background="#DC262610"
+                           BorderBrush="#DC2626"
+                           BorderThickness="1"
+                           CornerRadius="8"
+                           Padding="12,10"
+                           IsVisible="{Binding ShowError}">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <icons:MaterialIcon Grid.Column="0"
+                                              Kind="AlertCircle"
+                                              Width="18" Height="18"
+                                              Foreground="#DC2626"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,8,0"/>
+                            <TextBlock Grid.Column="1"
+                                      Text="{Binding ErrorMessage}"
+                                      FontSize="13"
+                                      Foreground="#DC2626"
+                                      TextWrapping="Wrap"
+                                      VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Login Button -->
+                    <Button Command="{Binding LoginCommand}"
+                           Height="48"
+                           CornerRadius="10"
+                           FontSize="15"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Center"
+                           IsEnabled="{Binding !IsLoading}">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#3B82F6" Offset="0"/>
+                                <GradientStop Color="#2563EB" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <Button.Effect>
+                            <DropShadowEffect Color="#3B82F6" BlurRadius="15" Opacity="0.4"/>
+                        </Button.Effect>
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background">
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#2563EB" Offset="0"/>
+                                        <GradientStop Color="#1E40AF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Button:disabled">
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Style>
+                        </Button.Styles>
+                        
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" 
+                                       Spacing="8" 
+                                       HorizontalAlignment="Center"
+                                       IsVisible="{Binding !IsLoading}">
+                                <icons:MaterialIcon Kind="Login" 
+                                                  Width="20" Height="20"
+                                                  Foreground="White"/>
+                                <TextBlock Text="Iniciar Sesión" 
+                                          Foreground="White"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <!-- Loading Indicator -->
+                            <StackPanel Orientation="Horizontal" 
+                                       Spacing="10" 
+                                       HorizontalAlignment="Center"
+                                       IsVisible="{Binding IsLoading}">
+                                <TextBlock Text="●" 
+                                          FontSize="20"
+                                          Foreground="White"
+                                          VerticalAlignment="Center">
+                                    <TextBlock.Styles>
+                                        <Style Selector="TextBlock">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1.2" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%">
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="50%">
+                                                        <Setter Property="Opacity" Value="1"/>
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="100%">
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </TextBlock.Styles>
+                                </TextBlock>
+                                <TextBlock Text="Iniciando sesión..." 
+                                          Foreground="White"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+
+                <!-- Info de credenciales por defecto -->
+                <Border Grid.Row="2"
+                       Background="#3B82F610"
+                       BorderBrush="#3B82F630"
+                       BorderThickness="1"
+                       CornerRadius="8"
+                       Padding="12,10"
+                       Margin="0,20,0,0">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Credenciales por defecto:"
+                                  FontSize="12"
+                                  FontWeight="Bold"
+                                  Foreground="#3B82F6"/>
+                        <TextBlock FontSize="11" Foreground="#AAAAAA">
+                            <Run Text="Usuario:"/>
+                            <Run Text="admin" FontWeight="Bold" Foreground="White"/>
+                        </TextBlock>
+                        <TextBlock FontSize="11" Foreground="#AAAAAA">
+                            <Run Text="Contraseña:"/>
+                            <Run Text="admin123" FontWeight="Bold" Foreground="White"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

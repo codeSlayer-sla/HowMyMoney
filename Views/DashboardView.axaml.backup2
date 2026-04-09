@@ -80,73 +80,46 @@
                 </Border.Effect>
                 
                 <Grid RowDefinitions="Auto,Auto">
-                    <!-- Row 0: Título e Icono con Speech Bubble -->
+                    <!-- Row 0: Título e Icono -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12">
-                        <!-- Icono de la mascota -->
                         <Border Width="42" Height="42" 
-                               CornerRadius="21"
-                               ClipToBounds="True"
+                               CornerRadius="10"
                                Background="#1A1A1A"
                                BorderThickness="2"
-                               BorderBrush="#8B5CF660"
-                               VerticalAlignment="Center">
-                            <Image Source="/Assets/Money-removebg-preview.png"
-                                   Width="42" Height="42"
-                                   Stretch="Uniform"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
+                               BorderBrush="#8B5CF660">
+                            <Viewbox Width="24" Height="24">
+                                <Path Data="M3,3L21,21M3,21L21,3M7,12H17M12,7V17" 
+                                      Stroke="#A78BFA" 
+                                      StrokeThickness="2" 
+                                      StrokeLineCap="Round"/>
+                            </Viewbox>
                             <Border.Effect>
                                 <DropShadowEffect Color="#8B5CF6" BlurRadius="20" Opacity="0.6"/>
                             </Border.Effect>
                         </Border>
                         
-                        <!-- Speech Bubble (al lado derecho del icono) -->
-                        <Grid VerticalAlignment="Center">
-                            <Border Padding="12,8"
-                                   CornerRadius="12"
-                                   Background="#2D3748"
-                                   BorderThickness="2"
-                                   BorderBrush="#8B5CF640"
-                                   MaxWidth="280"
-                                   HorizontalAlignment="Left">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="15" Opacity="0.3" OffsetY="3"/>
-                                </Border.Effect>
-                                
-                                <Grid ColumnDefinitions="Auto,*">
-                                    <!-- Pequeña flecha apuntando al icono (izquierda) -->
-                                    <Canvas Grid.Column="0" 
-                                           Width="8" Height="16" 
-                                           Margin="-20,0,4,0"
-                                           VerticalAlignment="Center">
-                                        <Polygon Points="8,0 0,8 8,16" 
-                                                Fill="#2D3748"/>
-                                    </Canvas>
-                                    
-                                    <!-- Texto del mensaje -->
-                                    <TextBlock Grid.Column="1"
-                                              Text="{Binding MascotMessage}"
-                                              FontSize="13"
-                                              FontWeight="Medium"
-                                              Foreground="White"
-                                              TextWrapping="Wrap"
-                                              LineHeight="18"
-                                              VerticalAlignment="Center"/>
-                                </Grid>
-                                
-                                <!-- Animación de entrada -->
-                                <Border.Transitions>
-                                    <Transitions>
-                                        <DoubleTransition Property="Opacity" Duration="0:0:0.4"/>
-                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3">
-                                            <TransformOperationsTransition.Easing>
-                                                <CubicEaseOut/>
-                                            </TransformOperationsTransition.Easing>
-                                        </TransformOperationsTransition>
-                                    </Transitions>
-                                </Border.Transitions>
-                            </Border>
-                        </Grid>
+                        <StackPanel VerticalAlignment="Center" Spacing="3">
+                            <TextBlock Text="Dashboard de Inversiones" 
+                                      FontSize="18" 
+                                      FontWeight="Black"
+                                      Foreground="#FFFFFF"
+                                      LetterSpacing="0.5"
+                                      TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Background="#10B98120" 
+                                       CornerRadius="4" 
+                                       Padding="5,2">
+                                    <TextBlock Text="🔥 En vivo" 
+                                              FontSize="10" 
+                                              FontWeight="Bold"
+                                              Foreground="#10B981"/>
+                                </Border>
+                                <TextBlock Text="Tiempo real" 
+                                          FontSize="11" 
+                                          Foreground="#94A3B8"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                     
                     <!-- Row 1: Botones (se adaptan en pantallas pequeñas) -->
@@ -158,7 +131,7 @@
                         <Button Command="{Binding UpdatePricesCommand}"
                                Classes="modern"
                                MinHeight="40"
-                               Width="150"
+                               MinWidth="130"
                                Padding="12,0"
                                Margin="4"
                                FontWeight="Bold"
@@ -166,9 +139,7 @@
                                Foreground="White"
                                CornerRadius="10"
                                BorderThickness="1"
-                               BorderBrush="#3B82F640"
-                               HorizontalAlignment="Right"
-                               HorizontalContentAlignment="Center">
+                               BorderBrush="#3B82F640">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                     <GradientStop Color="#3B82F6" Offset="0"/>
@@ -201,7 +172,7 @@
                         <Button Command="{Binding ExportToCsvCommand}"
                                Classes="modern"
                                MinHeight="40"
-                               Width="150"
+                               MinWidth="130"
                                Padding="12,0"
                                Margin="4"
                                FontWeight="Bold"
@@ -209,9 +180,7 @@
                                Foreground="White"
                                CornerRadius="10"
                                BorderThickness="1"
-                               BorderBrush="#10B98140"
-                               HorizontalAlignment="Right"
-                               HorizontalContentAlignment="Center">
+                               BorderBrush="#10B98140">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                     <GradientStop Color="#10B981" Offset="0"/>
@@ -243,406 +212,265 @@
                 </Grid>
             </Border>
 
-            <!-- Tarjetas de resumen premium MEJORADAS -->
+            <!-- Tarjetas de resumen premium con glassmorphism RESPONSIVE -->
             <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <!-- Total Inversiones - Purple Theme MEJORADO -->
+                <!-- Total Inversiones - Purple Theme -->
                 <Border Classes="card"
-                       CornerRadius="24" 
-                       Padding="24,20"
-                       Margin="8"
-                       MinWidth="200"
-                       MaxWidth="340"
-                       BorderThickness="2"
+                       CornerRadius="18" 
+                       Padding="15"
+                       Margin="5"
+                       MinWidth="160"
+                       MaxWidth="320"
+                       BorderThickness="1"
+                       BorderBrush="#8B5CF630"
                        ClipToBounds="False">
-                    <!-- Fondo con glassmorphism -->
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#8B5CF6" Offset="0"/>
-                            <GradientStop Color="#6D28D9" Offset="0.5"/>
+                            <GradientStop Color="#7C3AED" Offset="0"/>
                             <GradientStop Color="#5B21B6" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    
-                    <!-- Borde animado -->
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#A78BFA" Offset="0"/>
-                            <GradientStop Color="#8B5CF6" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
-                    
-                    <!-- Sombra dramática -->
                     <Border.Effect>
-                        <DropShadowEffect Color="#8B5CF6" BlurRadius="35" Opacity="0.5" OffsetY="10"/>
+                        <DropShadowEffect Color="#7C3AED" BlurRadius="25" Opacity="0.35" OffsetY="8"/>
                     </Border.Effect>
                     
-                    <Grid RowDefinitions="Auto,Auto,*,Auto">
-                        <!-- Icono mejorado con efecto neón -->
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <!-- Icono con fondo oscuro sólido -->
                         <Border Grid.Row="0" 
-                               Width="56" Height="56"
-                               CornerRadius="16"
-                               Background="#03030315"
-                               BorderBrush="#FFFFFF35"
-                               BorderThickness="1.5"
+                               Width="42" Height="42"
+                               CornerRadius="10"
+                               Background="#1A1A1A"
+                               BorderBrush="#FFFFFF20"
+                               BorderThickness="1"
                                HorizontalAlignment="Left"
-                               Margin="0,0,0,16">
-                            <Grid>
-                                <Viewbox Width="28" Height="28">
-                                    <Path Data="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" 
-                                          Fill="White"
-                                          Opacity="0.95"/>
-                                </Viewbox>
-                            </Grid>
+                               Margin="0,0,0,12">
+                            <Viewbox Width="24" Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <Path Data="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" 
+                                      Fill="White"/>
+                            </Viewbox>
                             <Border.Effect>
-                                <DropShadowEffect Color="#FFFFFF" BlurRadius="20" Opacity="0.4"/>
+                                <DropShadowEffect Color="#FFFFFF" BlurRadius="12" Opacity="0.3"/>
                             </Border.Effect>
                         </Border>
                         
-                        <!-- Label superior -->
+                        <!-- Label -->
                         <TextBlock Grid.Row="1"
-                                  Text="TOTAL INVERSIONES" 
-                                  FontSize="10" 
+                                  Text="Total Inversiones" 
+                                  FontSize="12" 
                                   Foreground="#FFFFFF"
-                                  Opacity="0.75"
-                                  FontWeight="Bold"
-                                  LetterSpacing="1.2"
-                                  Margin="0,0,0,8"/>
-                        
-                        <!-- Valor principal con número grande -->
-                        <TextBlock Grid.Row="2"
-                                  Text="{Binding TotalInvestments}" 
-                                  FontSize="48" 
-                                  FontWeight="Black"
-                                  Foreground="#FFFFFF"
-                                  LetterSpacing="-0.5"
+                                  Opacity="0.8"
+                                  FontWeight="SemiBold"
+                                  LetterSpacing="0.5"
                                   VerticalAlignment="Center"
-                                  TextTrimming="CharacterEllipsis"
-                                  Margin="0,4,0,8">
-                            <TextBlock.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.3" OffsetY="2"/>
-                            </TextBlock.Effect>
-                        </TextBlock>
+                                  TextWrapping="Wrap"/>
                         
-                        <!-- Badge inferior -->
-                        <Border Grid.Row="3"
-                               Background="#4B556380"
-                               CornerRadius="8"
-                               Padding="12,6"
-                               HorizontalAlignment="Left">
-                            <TextBlock Text="activos" 
-                                      FontSize="11" 
-                                      FontWeight="Bold"
+                        <!-- Valor -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6" FlowDirection="LeftToRight">
+                            <TextBlock Text="{Binding TotalInvestments}" 
+                                      FontSize="36" 
+                                      FontWeight="Black"
                                       Foreground="#FFFFFF"
-                                      Opacity="0.95"
-                                      LetterSpacing="0.5"/>
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.2"/>
-                            </Border.Effect>
-                        </Border>
+                                      LetterSpacing="1"/>
+                            <Border Background="#FFFFFF20"
+                                   CornerRadius="6"
+                                   Padding="6,3"
+                                   VerticalAlignment="Center">
+                                <TextBlock Text="activos" 
+                                          FontSize="10" 
+                                          FontWeight="Bold"
+                                          Foreground="#FFFFFF"
+                                          Opacity="0.9"/>
+                            </Border>
+                        </StackPanel>
                     </Grid>
-                    
-                    <!-- Overlay sutil para profundidad -->
-                    <Border.OpacityMask>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                            <GradientStop Color="#FFFFFFFF" Offset="0"/>
-                            <GradientStop Color="#FFFFFFFF" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.OpacityMask>
                 </Border>
 
-                <!-- Total Invertido - Blue Theme MEJORADO -->
+                <!-- Invertido - Blue Theme -->
                 <Border Classes="card"
-                       CornerRadius="24" 
-                       Padding="24,20"
-                       Margin="8"
-                       MinWidth="200"
-                       MaxWidth="340"
-                       BorderThickness="2"
-                       Background="#00000000"
+                       CornerRadius="18" 
+                       Padding="15"
+                       Margin="5"
+                       MinWidth="160"
+                       MaxWidth="320"
+                       BorderThickness="1"
+                       BorderBrush="#3B82F630"
                        ClipToBounds="False">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#3B82F6" Offset="0"/>
-                            <GradientStop Color="#2563EB" Offset="0.5"/>
                             <GradientStop Color="#1E40AF" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#60A5FA" Offset="0"/>
-                            <GradientStop Color="#3B82F6" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
-                    
                     <Border.Effect>
-                        <DropShadowEffect Color="#3B82F6" BlurRadius="35" Opacity="0.5" OffsetY="10"/>
+                        <DropShadowEffect Color="#3B82F6" BlurRadius="25" Opacity="0.35" OffsetY="8"/>
                     </Border.Effect>
                     
-                    <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <Grid RowDefinitions="Auto,*,Auto">
                         <Border Grid.Row="0" 
-                               Width="56" Height="56"
-                               CornerRadius="16"
-                               Background="#4B556330"
-                               BorderBrush="#FFFFFF35"
-                               BorderThickness="1.5"
+                               Width="42" Height="42"
+                               CornerRadius="10"
+                               Background="#1A1A1A"
+                               BorderBrush="#FFFFFF20"
+                               BorderThickness="1"
                                HorizontalAlignment="Left"
-                               Margin="0,0,0,16">
-                            <Grid>
-                                <Viewbox Width="28" Height="28">
-                                    <Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" 
-                                          Fill="White"
-                                          Opacity="0.95"/>
-                                </Viewbox>
-                            </Grid>
+                               Margin="0,0,0,12">
+                            <Viewbox Width="24" Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" 
+                                      Fill="White"/>
+                            </Viewbox>
                             <Border.Effect>
-                                <DropShadowEffect Color="#FFFFFF" BlurRadius="20" Opacity="0.4"/>
+                                <DropShadowEffect Color="#FFFFFF" BlurRadius="12" Opacity="0.3"/>
                             </Border.Effect>
                         </Border>
                         
                         <TextBlock Grid.Row="1"
-                                  Text="TOTAL INVERTIDO" 
-                                  FontSize="10" 
+                                  Text="Total Invertido" 
+                                  FontSize="12" 
                                   Foreground="#FFFFFF"
-                                  Opacity="0.75"
-                                  FontWeight="Bold"
-                                  LetterSpacing="1.2"
-                                  Margin="0,0,0,8"/>
+                                  Opacity="0.8"
+                                  FontWeight="SemiBold"
+                                  LetterSpacing="0.5"
+                                  VerticalAlignment="Center"
+                                  TextWrapping="Wrap"/>
                         
-                        <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,4,0,12">
-                            <TextBlock Text="{Binding TotalInvested, StringFormat='${0:N0}'}" 
-                                      FontSize="38" 
-                                      FontWeight="Black"
-                                      Foreground="#FFFFFF"
-                                      LetterSpacing="-0.5"
-                                      TextTrimming="CharacterEllipsis">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.3" OffsetY="2"/>
-                                </TextBlock.Effect>
-                            </TextBlock>
-                            <TextBlock Text="USD" 
-                                      FontSize="14" 
-                                      FontWeight="SemiBold"
-                                      Foreground="#0d0d0dff"
-                                      Opacity="0.6"
-                                      LetterSpacing="2"
-                                      Margin="0,0,0,0"/>
-                        </StackPanel>
-                        
-                        <Border Grid.Row="3"
-                               Background="#4B556380"
-                               CornerRadius="8"
-                               Padding="12,6"
-                               HorizontalAlignment="Stretch">
-                            <TextBlock Text="💰 Capital inicial" 
-                                      FontSize="11" 
-                                      FontWeight="SemiBold"
-                                      Foreground="#FFFFFF"
-                                      Opacity="0.9"
-                                      HorizontalAlignment="Center"/>
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.2"/>
-                            </Border.Effect>
-                        </Border>
+                        <TextBlock Grid.Row="2"
+                                  Text="{Binding TotalInvested, StringFormat='${0:N0}'}" 
+                                  FontSize="34" 
+                                  FontWeight="Black"
+                                  Foreground="#FFFFFF"
+                                  LetterSpacing="1"/>
                     </Grid>
                 </Border>
 
-                <!-- Valor Actual - Green Theme MEJORADO -->
+                <!-- Valor Actual - Green Theme -->
                 <Border Classes="card"
-                       CornerRadius="24" 
-                       Padding="24,20"
-                       Margin="8"
-                       MinWidth="200"
-                       MaxWidth="340"
-                       BorderThickness="2"
+                       CornerRadius="18" 
+                       Padding="15"
+                       Margin="5"
+                       MinWidth="160"
+                       MaxWidth="320"
+                       BorderThickness="1"
+                       BorderBrush="#10B98130"
                        ClipToBounds="False">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#10B981" Offset="0"/>
-                            <GradientStop Color="#059669" Offset="0.5"/>
                             <GradientStop Color="#047857" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#34D399" Offset="0"/>
-                            <GradientStop Color="#10B981" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
-                    
                     <Border.Effect>
-                        <DropShadowEffect Color="#10B981" BlurRadius="35" Opacity="0.5" OffsetY="10"/>
+                        <DropShadowEffect Color="#10B981" BlurRadius="25" Opacity="0.35" OffsetY="8"/>
                     </Border.Effect>
                     
-                    <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <Grid RowDefinitions="Auto,*,Auto">
                         <Border Grid.Row="0" 
-                               Width="56" Height="56"
-                               CornerRadius="16"
-                               Background="#4B556330"
-                               BorderBrush="#FFFFFF35"
-                               BorderThickness="1.5"
+                               Width="42" Height="42"
+                               CornerRadius="10"
+                               Background="#1A1A1A"
+                               BorderBrush="#FFFFFF20"
+                               BorderThickness="1"
                                HorizontalAlignment="Left"
-                               Margin="0,0,0,16">
-                            <Grid>
-                                <Viewbox Width="28" Height="28">
-                                    <Path Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" 
-                                          Fill="White"
-                                          Opacity="0.95"/>
-                                </Viewbox>
-                            </Grid>
+                               Margin="0,0,0,12">
+                            <Viewbox Width="24" Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <Path Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" 
+                                      Fill="White"/>
+                            </Viewbox>
                             <Border.Effect>
-                                <DropShadowEffect Color="#FFFFFF" BlurRadius="20" Opacity="0.4"/>
+                                <DropShadowEffect Color="#FFFFFF" BlurRadius="12" Opacity="0.3"/>
                             </Border.Effect>
                         </Border>
                         
                         <TextBlock Grid.Row="1"
-                                  Text="VALOR ACTUAL" 
-                                  FontSize="10" 
+                                  Text="Valor Actual" 
+                                  FontSize="12" 
                                   Foreground="#FFFFFF"
-                                  Opacity="0.75"
-                                  FontWeight="Bold"
-                                  LetterSpacing="1.2"
-                                  Margin="0,0,0,8"/>
+                                  Opacity="0.8"
+                                  FontWeight="SemiBold"
+                                  LetterSpacing="0.5"
+                                  VerticalAlignment="Center"
+                                  TextWrapping="Wrap"/>
                         
-                        <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,4,0,12">
-                            <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N0}'}" 
-                                      FontSize="38" 
-                                      FontWeight="Black"
-                                      Foreground="#FFFFFF"
-                                      LetterSpacing="-0.5"
-                                      TextTrimming="CharacterEllipsis">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.3" OffsetY="2"/>
-                                </TextBlock.Effect>
-                            </TextBlock>
-                            <TextBlock Text="USD" 
-                                      FontSize="14" 
-                                      FontWeight="SemiBold"
-                                      Foreground="#FFFFFF"
-                                      Opacity="0.6"
-                                      LetterSpacing="2"
-                                      Margin="0,0,0,0"/>
-                        </StackPanel>
-                        
-                        <Border Grid.Row="3"
-                               Background="#4B556380"
-                               CornerRadius="8"
-                               Padding="12,6"
-                               HorizontalAlignment="Stretch">
-                            <TextBlock Text="📈 Valor del portafolio" 
-                                      FontSize="11" 
-                                      FontWeight="SemiBold"
-                                      Foreground="#FFFFFF"
-                                      Opacity="0.9"
-                                      Background="#00000000"
-                                      HorizontalAlignment="Center"/>
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.2"/>
-                            </Border.Effect>
-                        </Border>
+                        <TextBlock Grid.Row="2"
+                                  Text="{Binding CurrentValue, StringFormat='${0:N0}'}" 
+                                  FontSize="34" 
+                                  FontWeight="Black"
+                                  Foreground="#FFFFFF"
+                                  LetterSpacing="1"/>
                     </Grid>
                 </Border>
 
-                <!-- Ganancia/Pérdida - Orange Theme MEJORADO -->
+                <!-- Ganancia/Pérdida - Orange Theme -->
                 <Border Classes="card"
-                       CornerRadius="24" 
-                       Padding="24,20"
-                       Margin="8"
-                       MinWidth="200"
-                       MaxWidth="340"
-                       BorderThickness="2"
+                       CornerRadius="18" 
+                       Padding="15"
+                       Margin="5"
+                       MinWidth="160"
+                       MaxWidth="320"
+                       BorderThickness="1"
+                       BorderBrush="#F59E0B30"
                        ClipToBounds="False">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#6B7280" Offset="0"/>
-                            <GradientStop Color="#4B5563" Offset="0.5"/>
-                            <GradientStop Color="#374151" Offset="1"/>
+                            <GradientStop Color="#F59E0B" Offset="0"/>
+                            <GradientStop Color="#D97706" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#9CA3AF" Offset="0"/>
-                            <GradientStop Color="#6B7280" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
-                    
                     <Border.Effect>
-                        <DropShadowEffect Color="#374151" BlurRadius="35" Opacity="0.5" OffsetY="10"/>
+                        <DropShadowEffect Color="#F59E0B" BlurRadius="25" Opacity="0.35" OffsetY="8"/>
                     </Border.Effect>
                     
-                    <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <Grid RowDefinitions="Auto,*,Auto">
                         <Border Grid.Row="0" 
-                               Width="56" Height="56"
-                               CornerRadius="16"
-                               Background="#4B556330"
-                               BorderBrush="#FFFFFF35"
-                               BorderThickness="1.5"
+                               Width="42" Height="42"
+                               CornerRadius="10"
+                               Background="#1A1A1A"
+                               BorderBrush="#FFFFFF20"
+                               BorderThickness="1"
                                HorizontalAlignment="Left"
-                               Margin="0,0,0,16">
-                            <Grid>
-                                <Viewbox Width="28" Height="28">
-                                    <Path Data="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" 
-                                          Fill="White"
-                                          Opacity="0.95"/>
-                                </Viewbox>
-                            </Grid>
+                               Margin="0,0,0,12">
+                            <Viewbox Width="24" Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <Path Data="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" 
+                                      Fill="White"/>
+                            </Viewbox>
                             <Border.Effect>
-                                <DropShadowEffect Color="#FFFFFF" BlurRadius="20" Opacity="0.4"/>
+                                <DropShadowEffect Color="#FFFFFF" BlurRadius="12" Opacity="0.3"/>
                             </Border.Effect>
                         </Border>
                         
                         <TextBlock Grid.Row="1"
-                                  Text="GANANCIA/PÉRDIDA" 
-                                  FontSize="10" 
+                                  Text="Ganancia/Pérdida" 
+                                  FontSize="12" 
                                   Foreground="#FFFFFF"
-                                  Opacity="0.75"
-                                  FontWeight="Bold"
-                                  LetterSpacing="1.2"
-                                  Margin="0,0,0,8"/>
+                                  Opacity="0.8"
+                                  FontWeight="SemiBold"
+                                  LetterSpacing="0.5"
+                                  VerticalAlignment="Center"
+                                  TextWrapping="Wrap"/>
                         
-                        <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,4,0,12" Spacing="6">
+                        <StackPanel Grid.Row="2" Spacing="4">
                             <TextBlock Text="{Binding TotalProfitLoss, StringFormat='${0:N0}'}" 
-                                      FontSize="38" 
+                                      FontSize="34" 
                                       FontWeight="Black"
                                       Foreground="#FFFFFF"
-                                      LetterSpacing="-0.5"
-                                      TextTrimming="CharacterEllipsis">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.3" OffsetY="2"/>
-                                </TextBlock.Effect>
-                            </TextBlock>
-                            <Border Background="#4B556360"
-                                   CornerRadius="10"
-                                   Padding="14,6"
+                                      LetterSpacing="1"/>
+                            <Border Background="#FFFFFF20"
+                                   CornerRadius="6"
+                                   Padding="8,3"
                                    HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding ProfitLossPercentage, StringFormat={}{0:F1}%}" 
-                                          FontSize="16" 
-                                          FontWeight="Black"
-                                          Foreground="#FFFFFF"
-                                          LetterSpacing="0.5"/>
-                                <Border.Effect>
-                                    <DropShadowEffect Color="#000000" BlurRadius="10" Opacity="0.3"/>
-                                </Border.Effect>
+                                <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='+{0:F1}%'}" 
+                                          FontSize="12" 
+                                          FontWeight="Bold"
+                                          Foreground="#FFFFFF"/>
                             </Border>
                         </StackPanel>
-                        
-                        <Border Grid.Row="3"
-                               Background="#4B556380"
-                               CornerRadius="8"
-                               Padding="12,6"
-                               HorizontalAlignment="Stretch">
-                            <TextBlock Text="🔥 Rendimiento total" 
-                                      FontSize="11" 
-                                      FontWeight="SemiBold"
-                                      Foreground="#FFFFFF"
-                                      Opacity="0.9"
-                                      HorizontalAlignment="Center"/>
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" Opacity="0.2"/>
-                            </Border.Effect>
-                        </Border>
                     </Grid>
                 </Border>
 
@@ -800,34 +628,31 @@
                         </Border>
                         
                         <!-- Selector de período (solo visible en vista Rendimiento) -->
-                        <ScrollViewer Grid.Column="1"
-                                     HorizontalScrollBarVisibility="Auto"
-                                     VerticalScrollBarVisibility="Disabled"
-                                     HorizontalAlignment="Right"
-                                     MaxWidth="300">
-                            <Border Background="#0F1419" 
-                                   CornerRadius="10" 
-                                   Padding="4"
-                                   BorderBrush="#FFFFFF15"
-                                   BorderThickness="1"
-                                   IsVisible="{Binding IsPerformanceViewActive}">
+                        <Border Grid.Column="1"
+                               Background="#0F1419" 
+                               CornerRadius="10" 
+                               Padding="4"
+                               HorizontalAlignment="Right"
+                               BorderBrush="#FFFFFF15"
+                               BorderThickness="1"
+                               IsVisible="{Binding IsPerformanceViewActive}">
                                 <StackPanel Orientation="Horizontal" Spacing="3">
                                     <!-- Botón Diario -->
                                     <Button Command="{Binding ChangePeriodCommand}"
                                            CommandParameter="Daily"
-                                           Width="85"
-                                           Height="32"
-                                           Padding="8,6"
+                                           MinWidth="70"
+                                           Height="30"
+                                           Padding="6,4"
                                            CornerRadius="6"
                                            Cursor="Hand"
-                                           HorizontalContentAlignment="Center"
                                            IsEnabled="{Binding !IsLoadingChart}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-                                            <icons:MaterialIcon Kind="CalendarToday" 
-                                                              Width="14" Height="14"
-                                                              VerticalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <Viewbox Width="12" Height="12" VerticalAlignment="Center">
+                                                <Path Data="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" 
+                                                      Fill="#8E8E93"/>
+                                            </Viewbox>
                                             <TextBlock Text="Día" 
-                                                      FontSize="12" 
+                                                      FontSize="11" 
                                                       FontWeight="SemiBold"
                                                       VerticalAlignment="Center"/>
                                         </StackPanel>
@@ -851,7 +676,7 @@
                                     </Button>
                                     
                                     <!-- Botón Diario ACTIVO -->
-                                    <Border Width="85"
+                                    <Border Width="80"
                                            Height="32"
                                            CornerRadius="6" 
                                            Padding="8,6"
@@ -878,14 +703,13 @@
                                     <!-- Botón Semanal -->
                                     <Button Command="{Binding ChangePeriodCommand}"
                                            CommandParameter="Weekly"
-                                           Width="85"
+                                           Width="90"
                                            Height="32"
                                            Padding="8,6"
                                            CornerRadius="6"
                                            Cursor="Hand"
-                                           HorizontalContentAlignment="Center"
                                            IsEnabled="{Binding !IsLoadingChart}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
                                             <icons:MaterialIcon Kind="CalendarWeek" 
                                                               Width="14" Height="14"
                                                               VerticalAlignment="Center"/>
@@ -914,7 +738,7 @@
                                     </Button>
                                     
                                     <!-- Botón Semanal ACTIVO -->
-                                    <Border Width="85"
+                                    <Border Width="90"
                                            Height="32"
                                            CornerRadius="6" 
                                            Padding="8,6"
@@ -941,14 +765,13 @@
                                     <!-- Botón Mensual -->
                                     <Button Command="{Binding ChangePeriodCommand}"
                                            CommandParameter="Monthly"
-                                           Width="85"
+                                           Width="80"
                                            Height="32"
                                            Padding="8,6"
                                            CornerRadius="6"
                                            Cursor="Hand"
-                                           HorizontalContentAlignment="Center"
                                            IsEnabled="{Binding !IsLoadingChart}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
                                             <icons:MaterialIcon Kind="CalendarMonth" 
                                                               Width="14" Height="14"
                                                               VerticalAlignment="Center"/>
@@ -977,7 +800,7 @@
                                     </Button>
                                     
                                     <!-- Botón Mensual ACTIVO -->
-                                    <Border Width="85"
+                                    <Border Width="80"
                                            Height="32"
                                            CornerRadius="6" 
                                            Padding="8,6"
@@ -1002,7 +825,7 @@
                                     </Border>
                                 </StackPanel>
                             </Border>
-                        </ScrollViewer>
+                        </Border>
                     </Grid>
                     
                     <!-- VISTA DE RENDIMIENTO -->
@@ -1011,8 +834,6 @@
                         <Grid Height="300">
                             <!-- Gráfico -->
                             <lvc:CartesianChart Series="{Binding MonthlyPerformanceSeries}"
-                                               XAxes="{Binding XAxes}"
-                                               YAxes="{Binding YAxes}"
                                                Opacity="{Binding IsLoadingChart, Converter={StaticResource InverseBoolToOpacityConverter}}"/>
                             
                             <!-- Indicador de carga -->
@@ -1050,7 +871,80 @@
                     <!-- VISTA DE DISTRIBUCIÓN -->
                     <StackPanel IsVisible="{Binding IsDistributionViewActive}" Margin="0,15,0,0">
                         <lvc:PieChart Series="{Binding AssetDistributionSeries}" 
-                                     Height="320"/>
+                                     Height="280"
+                                     Margin="0,0,0,15"/>
+                        
+                        <!-- Leyenda de Colores -->
+                        <Border Background="#0F1419" 
+                               CornerRadius="12" 
+                               Padding="18"
+                               BorderBrush="#FFFFFF20"
+                               BorderThickness="1">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" BlurRadius="10" Opacity="0.5"/>
+                            </Border.Effect>
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="📊 Leyenda de Distribución" 
+                                          FontSize="13" 
+                                          FontWeight="ExtraBold"
+                                          Foreground="#FFFFFF"
+                                          Margin="0,0,0,5"/>
+                                
+                                <!-- Crypto - Azul -->
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="24" Height="24" 
+                                           CornerRadius="6"
+                                           Background="#3B82F6"
+                                           BorderBrush="#3B82F660"
+                                           BorderThickness="2"/>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Criptomonedas" 
+                                                  FontSize="13" 
+                                                  FontWeight="Bold"
+                                                  Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Bitcoin, Ethereum, etc." 
+                                                  FontSize="11" 
+                                                  Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <!-- Skins - Verde -->
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="24" Height="24" 
+                                           CornerRadius="6"
+                                           Background="#10B981"
+                                           BorderBrush="#10B98160"
+                                           BorderThickness="2"/>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Skins CS:GO" 
+                                                  FontSize="13" 
+                                                  FontWeight="Bold"
+                                                  Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Armas, guantes, cuchillos" 
+                                                  FontSize="11" 
+                                                  Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <!-- Manual - Naranja -->
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="24" Height="24" 
+                                           CornerRadius="6"
+                                           Background="#F59E0B"
+                                           BorderBrush="#F59E0B60"
+                                           BorderThickness="2"/>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Manuales" 
+                                                  FontSize="13" 
+                                                  FontWeight="Bold"
+                                                  Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Inversiones personalizadas" 
+                                                  FontSize="11" 
+                                                  Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -1077,7 +971,7 @@
                         <icons:MaterialIcon Grid.Column="0"
                                           Kind="Bitcoin" 
                                           Width="28" Height="28" 
-                                          Foreground="#9CA3AF"
+                                          Foreground="#F59E0B"
                                           VerticalAlignment="Center"
                                           Margin="0,0,12,0"/>
                         <TextBlock Grid.Column="1"
@@ -1093,7 +987,7 @@
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <icons:MaterialIcon Kind="Counter" Width="16" Height="16" Foreground="White" Background="#00000000"/>
+                                <icons:MaterialIcon Kind="Counter" Width="16" Height="16" Foreground="White"/>
                                 <TextBlock Text="{Binding CryptoSummaries.Count, StringFormat='{}{0} activos'}"
                                           FontSize="12"
                                           FontWeight="Bold"
@@ -1123,7 +1017,7 @@
                                                ClipToBounds="True"
                                                Background="#3C3C3C"
                                                Margin="0,0,20,0">
-                                            <Image Source="{Binding ImageBitmap}" 
+                                            <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                   Stretch="UniformToFill"/>
                                         </Border>
                                         
@@ -1183,14 +1077,10 @@
                                                Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).OpenAdjustCryptoDialogCommand}"
                                                CommandParameter="{Binding}"
                                                Classes="modern"
-                                               Width="50"
-                                               Height="46"
                                                Padding="12,10"
                                                Foreground="White"
                                                CornerRadius="10"
                                                VerticalAlignment="Center"
-                                               HorizontalAlignment="Center"
-                                               HorizontalContentAlignment="Center"
                                                ToolTip.Tip="Ajustar cantidad por earnings/staking">
                                             <icons:MaterialIcon Kind="ChartTimelineVariant" Width="22" Height="22"/>
                                             <Button.Background>
@@ -1264,11 +1154,10 @@
                                            Margin="0,0,0,12"
                                            BorderBrush="#3E3E42"
                                            BorderThickness="1">
-                                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                            <Grid ColumnDefinitions="280,140,140,140,180,60" MinWidth="940">
+                                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                                             
                                             <!-- Columna 1: Imagen, Nombre y Tipo -->
-                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,20,0">
+                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,30,0">
                                                 <!-- Imagen del activo -->
                                                 <Border Grid.Column="0"
                                                        Width="50" 
@@ -1278,91 +1167,83 @@
                                                        Background="#3C3C3C"
                                                        Margin="0,0,15,0"
                                                        VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageBitmap}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
                                                 <StackPanel Grid.Column="1" 
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Investment.Name}" 
+                                                           VerticalAlignment="Center"
+                                                           Width="230">
+                                                    <TextBlock Text="{Binding Name}" 
                                                               FontSize="16" 
                                                               FontWeight="Bold"
                                                               Foreground="White"
-                                                              TextWrapping="Wrap"
-                                                              TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding Investment.AssetType}" 
+                                                              TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AssetType}" 
                                                               FontSize="12" 
                                                               Foreground="#AAAAAA"
-                                                              Margin="0,0,0,0"/>
+                                                              Margin="0,4,0,0"/>
                                                 </StackPanel>
                                             </Grid>
                                             
                                             <!-- Columna 2: Cantidad -->
-                                            <StackPanel Grid.Column="1" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Cantidad" 
+                                            <StackPanel Grid.Column="1" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="📊 Cantidad" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.Quantity, StringFormat='{}{0:N4}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N4}'}" 
                                                           FontSize="15" 
                                                           FontWeight="SemiBold"
                                                           Foreground="White"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
                                             <!-- Columna 3: Total Invertido -->
-                                            <StackPanel Grid.Column="2" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Total Invertido" 
+                                            <StackPanel Grid.Column="2" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="� Total Invertido" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.TotalPurchaseValue, StringFormat='${0:N2}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding TotalPurchaseValue, StringFormat='${0:N2}'}" 
                                                           FontSize="15" 
                                                           FontWeight="Bold"
                                                           Foreground="#FFB347"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
                                             <!-- Columna 4: Valor Actual -->
-                                            <StackPanel Grid.Column="3" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Valor Actual" 
+                                            <StackPanel Grid.Column="3" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="� Valor Actual" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.CurrentValue, StringFormat='${0:N2}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
                                                           FontSize="15" 
                                                           FontWeight="Bold"
                                                           Foreground="#4FC3F7"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
                                             <!-- Columna 5: Ganancia/Pérdida y Porcentaje -->
                                             <Border Grid.Column="4"
                                                    Background="#3E3E42"
                                                    CornerRadius="8"
-                                                   Padding="15,12"
-                                                   Margin="0,0,10,0"
+                                                   Padding="20,12"
+                                                   Margin="0,0,20,0"
                                                    VerticalAlignment="Center">
                                                 <StackPanel>
-                                                    <TextBlock Text="Ganancia/Pérdida" 
+                                                    <TextBlock Text="📊 Ganancia/Pérdida" 
                                                               FontSize="11" 
                                                               Foreground="#AAAAAA"
-                                                              FontWeight="Medium"
-                                                              Margin="0,0,0,4"
                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Investment.ProfitLoss, StringFormat='${0:N2}'}" 
+                                                    <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
                                                               FontSize="18" 
                                                               FontWeight="Bold"
-                                                              Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
                                                               HorizontalAlignment="Center"
-                                                              Margin="0,0,0,0"/>
-                                                    <TextBlock Text="{Binding Investment.ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                              Margin="0,4,0,4"/>
+                                                    <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
                                                               FontSize="14" 
                                                               FontWeight="SemiBold"
-                                                              Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
                                                               HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
@@ -1371,15 +1252,11 @@
                                             <Button Grid.Column="5"
                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
                                                    CommandParameter="{Binding}"
-                                                   Width="46"
-                                                   Height="46"
                                                    Padding="10,8"
                                                    Background="#DC2626"
                                                    Foreground="White"
                                                    CornerRadius="8"
                                                    VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   HorizontalContentAlignment="Center"
                                                    ToolTip.Tip="Eliminar inversión">
                                                 <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                                                 <Button.Styles>
@@ -1389,7 +1266,6 @@
                                                 </Button.Styles>
                                             </Button>
                                         </Grid>
-                                        </ScrollViewer>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -1443,11 +1319,10 @@
                                            Margin="0,0,0,12"
                                            BorderBrush="#3E3E42"
                                            BorderThickness="1">
-                                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                            <Grid ColumnDefinitions="280,140,140,140,180,60" MinWidth="940">
+                                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                                             
                                             <!-- Columna 1: Imagen, Nombre y Tipo -->
-                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,20,0">
+                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,30,0">
                                                 <Border Grid.Column="0"
                                                        Width="50" 
                                                        Height="50" 
@@ -1456,85 +1331,79 @@
                                                        Background="#3C3C3C"
                                                        Margin="0,0,15,0"
                                                        VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageBitmap}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
                                                 <StackPanel Grid.Column="1" 
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Investment.Name}" 
+                                                           VerticalAlignment="Center"
+                                                           Width="230">
+                                                    <TextBlock Text="{Binding Name}" 
                                                               FontSize="16" 
                                                               FontWeight="Bold"
                                                               Foreground="White"
-                                                              TextWrapping="Wrap"
-                                                              TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding Investment.AssetType}" 
+                                                              TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AssetType}" 
                                                               FontSize="12" 
                                                               Foreground="#AAAAAA"
-                                                              Margin="0,0,0,0"/>
+                                                              Margin="0,4,0,0"/>
                                                 </StackPanel>
                                             </Grid>
                                             
-                                            <StackPanel Grid.Column="1" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Cantidad" 
+                                            <StackPanel Grid.Column="1" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="📊 Cantidad" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.Quantity, StringFormat='{}{0:N4}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N4}'}" 
                                                           FontSize="15" 
                                                           FontWeight="SemiBold"
                                                           Foreground="White"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
-                                            <StackPanel Grid.Column="2" Margin="0,0,15,0" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" Margin="0,0,30,0" VerticalAlignment="Center">
                                                 <TextBlock Text="💰 Total Invertido" 
                                                           FontSize="11" 
                                                           Foreground="#AAAAAA"/>
-                                                <TextBlock Text="{Binding Investment.TotalPurchaseValue, StringFormat='${0:N2}'}" 
+                                                <TextBlock Text="{Binding TotalPurchaseValue, StringFormat='${0:N2}'}" 
                                                           FontSize="15" 
                                                           FontWeight="Bold"
                                                           Foreground="#FFB347"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
-                                            <StackPanel Grid.Column="3" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Valor Actual" 
+                                            <StackPanel Grid.Column="3" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="💎 Valor Actual" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.CurrentValue, StringFormat='${0:N2}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
                                                           FontSize="15" 
                                                           FontWeight="Bold"
                                                           Foreground="#4FC3F7"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
                                             <Border Grid.Column="4"
                                                    Background="#3E3E42"
                                                    CornerRadius="8"
-                                                   Padding="15,12"
-                                                   Margin="0,0,10,0"
+                                                   Padding="20,12"
+                                                   Margin="0,0,20,0"
                                                    VerticalAlignment="Center">
                                                 <StackPanel>
-                                                    <TextBlock Text="Ganancia/Pérdida" 
+                                                    <TextBlock Text="📊 Ganancia/Pérdida" 
                                                               FontSize="11" 
                                                               Foreground="#AAAAAA"
-                                                              FontWeight="Medium"
-                                                              Margin="0,0,0,4"
                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Investment.ProfitLoss, StringFormat='${0:N2}'}" 
+                                                    <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
                                                               FontSize="18" 
                                                               FontWeight="Bold"
-                                                              Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
                                                               HorizontalAlignment="Center"
-                                                              Margin="0,0,0,0"/>
-                                                    <TextBlock Text="{Binding Investment.ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                              Margin="0,4,0,4"/>
+                                                    <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
                                                               FontSize="14" 
                                                               FontWeight="SemiBold"
-                                                              Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
                                                               HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
@@ -1542,15 +1411,11 @@
                                             <Button Grid.Column="5"
                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
                                                    CommandParameter="{Binding}"
-                                                   Width="46"
-                                                   Height="46"
                                                    Padding="10,8"
                                                    Background="#DC2626"
                                                    Foreground="White"
                                                    CornerRadius="8"
                                                    VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   HorizontalContentAlignment="Center"
                                                    ToolTip.Tip="Eliminar inversión">
                                                 <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                                                 <Button.Styles>
@@ -1560,176 +1425,6 @@
                                                 </Button.Styles>
                                             </Button>
                                         </Grid>
-                                        </ScrollViewer>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </StackPanel>
-            </Border>
-
-            <!-- Inversiones en Acciones -->
-            <Border Background="#2D2D30" 
-                   Classes="card"
-                   CornerRadius="14" 
-                   Padding="25"
-                   BoxShadow="0 8 16 0 #22000000"
-                   BorderBrush="#3E3E42"
-                   BorderThickness="1"
-                   IsVisible="{Binding StockInvestments.Count}">
-                <StackPanel>
-                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
-                        <icons:MaterialIcon Grid.Column="0"
-                                          Kind="ChartLine" 
-                                          Width="24" Height="24" 
-                                          Foreground="#8B5CF6"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,12,0"/>
-                        <TextBlock Grid.Column="1"
-                                  Text="Inversiones en Acciones" 
-                                  FontSize="18" 
-                                  FontWeight="Bold"
-                                  Foreground="#FFFFFF"
-                                  VerticalAlignment="Center"/>
-                        <Border Grid.Column="2"
-                               Background="#3E3E42"
-                               CornerRadius="8"
-                               Padding="10,6"
-                               VerticalAlignment="Center">
-                            <TextBlock Text="{Binding StockInvestments.Count, StringFormat='{}{0} inversiones'}"
-                                      FontSize="12"
-                                      FontWeight="SemiBold"
-                                      Foreground="#AAAAAA"/>
-                        </Border>
-                    </Grid>
-                    
-                    <!-- Vista de Lista Personalizada -->
-                    <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding StockInvestments}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#252526" 
-                                           CornerRadius="8" 
-                                           Padding="20" 
-                                           Margin="0,0,0,12"
-                                           BorderBrush="#3E3E42"
-                                           BorderThickness="1">
-                                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                            <Grid ColumnDefinitions="280,140,140,140,180,60" MinWidth="940">
-                                            
-                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,20,0">
-                                                <Border Grid.Column="0"
-                                                       Width="50" 
-                                                       Height="50" 
-                                                       CornerRadius="25"
-                                                       ClipToBounds="True"
-                                                       Background="#3C3C3C"
-                                                       Margin="0,0,15,0"
-                                                       VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageBitmap}" 
-                                                          Stretch="UniformToFill"/>
-                                                </Border>
-                                                
-                                                <StackPanel Grid.Column="1" 
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Investment.Name}" 
-                                                              FontSize="16" 
-                                                              FontWeight="Bold"
-                                                              Foreground="White"
-                                                              TextWrapping="Wrap"
-                                                              TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding Investment.AssetType}" 
-                                                              FontSize="12" 
-                                                              Foreground="#AAAAAA"
-                                                              Margin="0,0,0,0"/>
-                                                </StackPanel>
-                                            </Grid>
-                                            
-                                            <!-- Columna 2: Cantidad -->
-                                            <StackPanel Grid.Column="1" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Cantidad" 
-                                                          FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.Quantity, StringFormat='{}{0:N4}'}" 
-                                                          FontSize="15" 
-                                                          FontWeight="SemiBold"
-                                                          Foreground="White"
-                                                          Margin="0,0,0,0"/>
-                                            </StackPanel>
-                                            
-                                            <!-- Columna 3: Precio Compra -->
-                                            <StackPanel Grid.Column="2" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Invertido" 
-                                                          FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.TotalPurchaseValue, StringFormat='${}{0:N2}'}" 
-                                                          FontSize="15" 
-                                                          FontWeight="SemiBold"
-                                                          Foreground="White"
-                                                          Margin="0,0,0,0"/>
-                                            </StackPanel>
-                                            
-                                            <!-- Columna 4: Valor Actual -->
-                                            <StackPanel Grid.Column="3" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Valor Actual" 
-                                                          FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.CurrentValue, StringFormat='${}{0:N2}'}" 
-                                                          FontSize="15" 
-                                                          FontWeight="SemiBold"
-                                                          Foreground="White"
-                                                          Margin="0,0,0,0"/>
-                                            </StackPanel>
-                                            
-                                            <!-- Columna 5: Ganancia/Pérdida -->
-                                            <StackPanel Grid.Column="4" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Ganancia" 
-                                                          FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.ProfitLoss, StringFormat='${}{0:N2}'}" 
-                                                          FontSize="15" 
-                                                          FontWeight="Bold"
-                                                          Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
-                                                          Margin="0,0,0,0"/>
-                                                <TextBlock Text="{Binding Investment.ProfitLossPercentage, StringFormat='{}{0:+0.00;-0.00;0}%'}" 
-                                                          FontSize="12" 
-                                                          Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
-                                                          Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                            
-                                            <!-- Columna 6: Acciones -->
-                                            <Button Grid.Column="5"
-                                                   Command="{Binding $parent[ItemsControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
-                                                   CommandParameter="{Binding}"
-                                                   Width="46"
-                                                   Height="46"
-                                                   Background="#1E1E1E"
-                                                   BorderBrush="Transparent"
-                                                   Foreground="#EF4444"
-                                                   Padding="12"
-                                                   CornerRadius="6"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   HorizontalContentAlignment="Center"
-                                                   ToolTip.Tip="Eliminar inversión">
-                                                <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
-                                                <Button.Styles>
-                                                    <Style Selector="Button:pointerover">
-                                                        <Setter Property="Background" Value="#B91C1C"/>
-                                                    </Style>
-                                                </Button.Styles>
-                                            </Button>
-                                        </Grid>
-                                        </ScrollViewer>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -1783,10 +1478,9 @@
                                            Margin="0,0,0,12"
                                            BorderBrush="#3E3E42"
                                            BorderThickness="1">
-                                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                            <Grid ColumnDefinitions="280,140,140,140,180,60" MinWidth="940">
+                                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                                             
-                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,20,0">
+                                            <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,30,0">
                                                 <Border Grid.Column="0"
                                                        Width="50" 
                                                        Height="50" 
@@ -1795,85 +1489,79 @@
                                                        Background="#3C3C3C"
                                                        Margin="0,0,15,0"
                                                        VerticalAlignment="Center">
-                                                    <Image Source="{Binding ImageBitmap}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 
                                                 <StackPanel Grid.Column="1" 
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Investment.Name}" 
+                                                           VerticalAlignment="Center"
+                                                           Width="230">
+                                                    <TextBlock Text="{Binding Name}" 
                                                               FontSize="16" 
                                                               FontWeight="Bold"
                                                               Foreground="White"
-                                                              TextWrapping="Wrap"
-                                                              TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding Investment.AssetType}" 
+                                                              TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AssetType}" 
                                                               FontSize="12" 
                                                               Foreground="#AAAAAA"
-                                                              Margin="0,0,0,0"/>
+                                                              Margin="0,4,0,0"/>
                                                 </StackPanel>
                                             </Grid>
                                             
-                                            <StackPanel Grid.Column="1" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Cantidad" 
+                                            <StackPanel Grid.Column="1" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="📊 Cantidad" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.Quantity, StringFormat='{}{0:N4}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N4}'}" 
                                                           FontSize="15" 
                                                           FontWeight="SemiBold"
                                                           Foreground="White"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
-                                            <StackPanel Grid.Column="2" Margin="0,0,15,0" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" Margin="0,0,30,0" VerticalAlignment="Center">
                                                 <TextBlock Text="💰 Total Invertido" 
                                                           FontSize="11" 
                                                           Foreground="#AAAAAA"/>
-                                                <TextBlock Text="{Binding Investment.TotalPurchaseValue, StringFormat='${0:N2}'}" 
+                                                <TextBlock Text="{Binding TotalPurchaseValue, StringFormat='${0:N2}'}" 
                                                           FontSize="15" 
                                                           FontWeight="Bold"
                                                           Foreground="#FFB347"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
-                                            <StackPanel Grid.Column="3" Margin="0,0,15,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Valor Actual" 
+                                            <StackPanel Grid.Column="3" Margin="0,0,30,0" VerticalAlignment="Center">
+                                                <TextBlock Text="💎 Valor Actual" 
                                                           FontSize="11" 
-                                                          FontWeight="Medium"
-                                                          Foreground="#AAAAAA"
-                                                          Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding Investment.CurrentValue, StringFormat='${0:N2}'}" 
+                                                          Foreground="#AAAAAA"/>
+                                                <TextBlock Text="{Binding CurrentValue, StringFormat='${0:N2}'}" 
                                                           FontSize="15" 
                                                           FontWeight="Bold"
                                                           Foreground="#4FC3F7"
-                                                          Margin="0,0,0,0"/>
+                                                          Margin="0,4,0,0"/>
                                             </StackPanel>
                                             
                                             <Border Grid.Column="4"
                                                    Background="#3E3E42"
                                                    CornerRadius="8"
-                                                   Padding="15,12"
-                                                   Margin="0,0,10,0"
+                                                   Padding="20,12"
+                                                   Margin="0,0,20,0"
                                                    VerticalAlignment="Center">
                                                 <StackPanel>
-                                                    <TextBlock Text="Ganancia/Pérdida" 
+                                                    <TextBlock Text="📊 Ganancia/Pérdida" 
                                                               FontSize="11" 
                                                               Foreground="#AAAAAA"
-                                                              FontWeight="Medium"
-                                                              Margin="0,0,0,4"
                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Investment.ProfitLoss, StringFormat='${0:N2}'}" 
+                                                    <TextBlock Text="{Binding ProfitLoss, StringFormat='${0:N2}'}" 
                                                               FontSize="18" 
                                                               FontWeight="Bold"
-                                                              Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
                                                               HorizontalAlignment="Center"
-                                                              Margin="0,0,0,0"/>
-                                                    <TextBlock Text="{Binding Investment.ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
+                                                              Margin="0,4,0,4"/>
+                                                    <TextBlock Text="{Binding ProfitLossPercentage, StringFormat='({0:F2}%)'}" 
                                                               FontSize="14" 
                                                               FontWeight="SemiBold"
-                                                              Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                                              Foreground="{Binding ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
                                                               HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
@@ -1881,15 +1569,11 @@
                                             <Button Grid.Column="5"
                                                    Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).DeleteInvestmentCommand}"
                                                    CommandParameter="{Binding}"
-                                                   Width="46"
-                                                   Height="46"
                                                    Padding="10,8"
                                                    Background="#DC2626"
                                                    Foreground="White"
                                                    CornerRadius="8"
                                                    VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   HorizontalContentAlignment="Center"
                                                    ToolTip.Tip="Eliminar inversión">
                                                 <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
                                                 <Button.Styles>
@@ -1899,7 +1583,6 @@
                                                 </Button.Styles>
                                             </Button>
                                         </Grid>
-                                        </ScrollViewer>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

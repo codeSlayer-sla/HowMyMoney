@@ -20,16 +20,19 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly CsvExportService _csvExportService;
     
     [ObservableProperty]
-    private ObservableCollection<Investment> _investments = new();
+    private ObservableCollection<InvestmentViewModel> _investments = new();
     
     [ObservableProperty]
-    private ObservableCollection<Investment> _cryptoInvestments = new();
+    private ObservableCollection<InvestmentViewModel> _cryptoInvestments = new();
     
     [ObservableProperty]
-    private ObservableCollection<Investment> _skinInvestments = new();
+    private ObservableCollection<InvestmentViewModel> _skinInvestments = new();
     
     [ObservableProperty]
-    private ObservableCollection<Investment> _manualInvestments = new();
+    private ObservableCollection<InvestmentViewModel> _stockInvestments = new();
+    
+    [ObservableProperty]
+    private ObservableCollection<InvestmentViewModel> _manualInvestments = new();
     
     [ObservableProperty]
     private ObservableCollection<CryptoSummary> _cryptoSummaries = new();
@@ -65,7 +68,10 @@ public partial class DashboardViewModel : ViewModelBase
     private bool _isLoading;
     
     [ObservableProperty]
-    private Investment? _selectedInvestment;
+    private string _mascotMessage = "¡Bienvenido! 👋";
+    
+    [ObservableProperty]
+    private InvestmentViewModel? _selectedInvestment;
     
     // Gráficos
     [ObservableProperty]
@@ -86,17 +92,53 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoadingChart = false;
     
+    [ObservableProperty]
+    private bool _showingPerformanceChart = true; // true = Rendimiento, false = Distribución
+    
+    // Ejes del gráfico con estilo negro
+    [ObservableProperty]
+    private LiveChartsCore.Kernel.Sketches.ICartesianAxis[] _xAxes = new LiveChartsCore.Kernel.Sketches.ICartesianAxis[]
+    {
+        new Axis
+        {
+            LabelsPaint = new SolidColorPaint(SKColors.Black),
+            SeparatorsPaint = new SolidColorPaint(new SKColor(255, 255, 255, 51))
+        }
+    };
+    
+    [ObservableProperty]
+    private LiveChartsCore.Kernel.Sketches.ICartesianAxis[] _yAxes = new LiveChartsCore.Kernel.Sketches.ICartesianAxis[]
+    {
+        new Axis
+        {
+            LabelsPaint = new SolidColorPaint(SKColors.Black),
+            SeparatorsPaint = new SolidColorPaint(new SKColor(255, 255, 255, 51))
+        }
+    };
+    
     // Propiedades para indicar qué botón está activo
     public bool IsDailyActive => SelectedPeriod == ChartPeriod.Daily;
     public bool IsWeeklyActive => SelectedPeriod == ChartPeriod.Weekly;
     public bool IsMonthlyActive => SelectedPeriod == ChartPeriod.Monthly;
+    
+    // Propiedades para las vistas del gráfico
+    public bool IsPerformanceViewActive => ShowingPerformanceChart;
+    public bool IsDistributionViewActive => !ShowingPerformanceChart;
     
     public DashboardViewModel()
     {
         _investmentService = new InvestmentService();
         _csvExportService = new CsvExportService();
         
-        _ = LoadDataAsync();
+        // LoadDataAsync será llamado explícitamente desde MainWindowViewModel
+    }
+    
+    /// <summary>
+    /// Inicializa y carga todos los datos del dashboard
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        await LoadDataAsync();
     }
     
     [RelayCommand]
@@ -114,29 +156,34 @@ public partial class DashboardViewModel : ViewModelBase
             Investments.Clear();
             CryptoInvestments.Clear();
             SkinInvestments.Clear();
+            StockInvestments.Clear();
             ManualInvestments.Clear();
             
             foreach (var inv in investments)
             {
                 Console.WriteLine($"   • Agregando: {inv.Name} - ${inv.CurrentPrice}");
-                Investments.Add(inv);
+                var invViewModel = new InvestmentViewModel(inv);
+                Investments.Add(invViewModel);
                 
                 // Agrupar por categoría
                 switch (inv.AssetType)
                 {
                     case AssetType.Criptomoneda:
-                        CryptoInvestments.Add(inv);
+                        CryptoInvestments.Add(invViewModel);
                         break;
                     case AssetType.SkinCSGO:
-                        SkinInvestments.Add(inv);
+                        SkinInvestments.Add(invViewModel);
+                        break;
+                    case AssetType.Accion:
+                        StockInvestments.Add(invViewModel);
                         break;
                     case AssetType.Manual:
-                        ManualInvestments.Add(inv);
+                        ManualInvestments.Add(invViewModel);
                         break;
                 }
             }
             Console.WriteLine($"✓ DashboardViewModel: Investments.Count = {Investments.Count}");
-            Console.WriteLine($"   📊 Crypto: {CryptoInvestments.Count}, Skins: {SkinInvestments.Count}, Manual: {ManualInvestments.Count}");
+            Console.WriteLine($"   📊 Crypto: {CryptoInvestments.Count}, Skins: {SkinInvestments.Count}, Stocks: {StockInvestments.Count}, Manual: {ManualInvestments.Count}");
             
             // Crear resumen de criptomonedas por tipo
             CreateCryptoSummary();
@@ -145,6 +192,7 @@ public partial class DashboardViewModel : ViewModelBase
             OnPropertyChanged(nameof(Investments));
             OnPropertyChanged(nameof(CryptoInvestments));
             OnPropertyChanged(nameof(SkinInvestments));
+            OnPropertyChanged(nameof(StockInvestments));
             OnPropertyChanged(nameof(ManualInvestments));
             
             var summary = await _investmentService.GetPortfolioSummaryAsync();
@@ -153,6 +201,9 @@ public partial class DashboardViewModel : ViewModelBase
             CurrentValue = summary.CurrentValue;
             TotalProfitLoss = summary.TotalProfitLoss;
             ProfitLossPercentage = summary.TotalProfitLossPercentage;
+            
+            // Actualizar mensaje de la mascota según el rendimiento
+            UpdateMascotMessage();
             
             Console.WriteLine($"📊 Resumen:");
             Console.WriteLine($"   Total Inversiones: {TotalInvestments}");
@@ -198,10 +249,11 @@ public partial class DashboardViewModel : ViewModelBase
     }
     
     [RelayCommand]
-    private async Task DeleteInvestmentAsync(Investment? investment)
+    private async Task DeleteInvestmentAsync(InvestmentViewModel? investmentViewModel)
     {
-        if (investment == null) return;
+        if (investmentViewModel?.Investment == null) return;
         
+        var investment = investmentViewModel.Investment;
         try
         {
             await _investmentService.DeleteInvestmentAsync(investment.Id);
@@ -245,7 +297,7 @@ public partial class DashboardViewModel : ViewModelBase
             
             // Obtener todas las inversiones de esta cripto
             var cryptoInvestmentsToAdjust = CryptoInvestments
-                .Where(i => i.Name.Equals(SelectedCryptoForAdjustment.Symbol, StringComparison.OrdinalIgnoreCase))
+                .Where(vm => vm.Investment.Name.Equals(SelectedCryptoForAdjustment.Symbol, StringComparison.OrdinalIgnoreCase))
                 .ToList();
             
             if (!cryptoInvestmentsToAdjust.Any())
@@ -254,7 +306,7 @@ public partial class DashboardViewModel : ViewModelBase
                 return;
             }
             
-            decimal oldTotalQuantity = cryptoInvestmentsToAdjust.Sum(i => i.Quantity);
+            decimal oldTotalQuantity = cryptoInvestmentsToAdjust.Sum(vm => vm.Investment.Quantity);
             decimal difference = NewCryptoQuantity - oldTotalQuantity;
             
             Console.WriteLine($"📊 Ajuste de {SelectedCryptoForAdjustment.Symbol}:");
@@ -291,7 +343,7 @@ public partial class DashboardViewModel : ViewModelBase
                 PurchasePrice = 0, // ⚠️ CERO porque NO invertiste nada, es ganancia
                 CurrentPrice = currentPrice,
                 PurchaseDate = DateTime.Now,
-                ImageUrl = firstInvestment.ImageUrl
+                ImageUrl = firstInvestment.Investment.ImageUrl
             };
             
             Console.WriteLine($"   ✨ Creando registro de earning:");
@@ -327,7 +379,8 @@ public partial class DashboardViewModel : ViewModelBase
         try
         {
             var filePath = _csvExportService.GetDefaultExportPath();
-            await _csvExportService.ExportInvestmentsAsync(Investments.ToList(), filePath);
+            var investments = Investments.Select(vm => vm.Investment).ToList();
+            await _csvExportService.ExportInvestmentsAsync(investments, filePath);
             StatusMessage = $"Exportado a: {filePath}";
         }
         catch (Exception ex)
@@ -341,6 +394,15 @@ public partial class DashboardViewModel : ViewModelBase
     {
         // Implementar navegación o diálogo
         StatusMessage = "Abriendo formulario de nueva inversión...";
+    }
+    
+    [RelayCommand]
+    private void ToggleChartView()
+    {
+        ShowingPerformanceChart = !ShowingPerformanceChart;
+        OnPropertyChanged(nameof(IsPerformanceViewActive));
+        OnPropertyChanged(nameof(IsDistributionViewActive));
+        Console.WriteLine($"📊 Vista cambiada a: {(ShowingPerformanceChart ? "Rendimiento" : "Distribución")}");
     }
     
     [RelayCommand]
@@ -393,6 +455,17 @@ public partial class DashboardViewModel : ViewModelBase
                 // Preparar etiquetas según el período
                 ChartLabels = performanceData.Select(p => FormatLabel(p.Period, SelectedPeriod)).ToArray();
                 
+                // Actualizar el eje X con las etiquetas
+                XAxes = new LiveChartsCore.Kernel.Sketches.ICartesianAxis[]
+                {
+                    new Axis
+                    {
+                        Labels = ChartLabels,
+                        LabelsPaint = new SolidColorPaint(SKColors.Black),
+                        SeparatorsPaint = new SolidColorPaint(new SKColor(255, 255, 255, 51))
+                    }
+                };
+                
                 // Calcular cambio porcentual
                 var firstValue = performanceData.First().TotalValue;
                 var lastValue = performanceData.Last().TotalValue;
@@ -435,22 +508,70 @@ public partial class DashboardViewModel : ViewModelBase
             
             // Gráfico de distribución por tipo
             var cryptoValue = Investments
-                .Where(i => i.AssetType == AssetType.Criptomoneda)
-                .Sum(i => i.CurrentValue);
+                .Where(vm => vm.Investment.AssetType == AssetType.Criptomoneda)
+                .Sum(vm => vm.Investment.CurrentValue);
             
             var skinsValue = Investments
-                .Where(i => i.AssetType == AssetType.SkinCSGO)
-                .Sum(i => i.CurrentValue);
+                .Where(vm => vm.Investment.AssetType == AssetType.SkinCSGO)
+                .Sum(vm => vm.Investment.CurrentValue);
+            
+            var stocksValue = Investments
+                .Where(vm => vm.Investment.AssetType == AssetType.Accion)
+                .Sum(vm => vm.Investment.CurrentValue);
             
             var manualValue = Investments
-                .Where(i => i.AssetType == AssetType.Manual)
-                .Sum(i => i.CurrentValue);
+                .Where(vm => vm.Investment.AssetType == AssetType.Manual)
+                .Sum(vm => vm.Investment.CurrentValue);
+            
+            // Calcular total y porcentajes
+            var totalValue = cryptoValue + skinsValue + stocksValue + manualValue;
+            var cryptoPercentage = totalValue > 0 ? (cryptoValue / totalValue) * 100 : 0;
+            var skinsPercentage = totalValue > 0 ? (skinsValue / totalValue) * 100 : 0;
+            var stocksPercentage = totalValue > 0 ? (stocksValue / totalValue) * 100 : 0;
+            var manualPercentage = totalValue > 0 ? (manualValue / totalValue) * 100 : 0;
             
             AssetDistributionSeries = new ISeries[]
             {
-                new PieSeries<decimal> { Values = new[] { cryptoValue }, Name = "Criptomonedas" },
-                new PieSeries<decimal> { Values = new[] { skinsValue }, Name = "Skins CS:GO" },
-                new PieSeries<decimal> { Values = new[] { manualValue }, Name = "Manual" }
+                new PieSeries<decimal> 
+                { 
+                    Values = new decimal[] { cryptoValue }, 
+                    Name = $"Criptomonedas ({cryptoPercentage:F1}%)",
+                    Fill = new SolidColorPaint(SKColor.Parse("#3B82F6")),
+                    DataLabelsSize = 16,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    DataLabelsFormatter = point => point.StackedValue!.Share > 0.01 ? $"{point.StackedValue!.Share:P1}" : ""
+                },
+                new PieSeries<decimal> 
+                { 
+                    Values = new decimal[] { skinsValue }, 
+                    Name = $"Skins CS:GO ({skinsPercentage:F1}%)",
+                    Fill = new SolidColorPaint(SKColor.Parse("#10B981")),
+                    DataLabelsSize = 16,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    DataLabelsFormatter = point => point.StackedValue!.Share > 0.01 ? $"{point.StackedValue!.Share:P1}" : ""
+                },
+                new PieSeries<decimal> 
+                { 
+                    Values = new decimal[] { stocksValue }, 
+                    Name = $"Acciones ({stocksPercentage:F1}%)",
+                    Fill = new SolidColorPaint(SKColor.Parse("#8B5CF6")),
+                    DataLabelsSize = 16,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    DataLabelsFormatter = point => point.StackedValue!.Share > 0.01 ? $"{point.StackedValue!.Share:P1}" : ""
+                },
+                new PieSeries<decimal> 
+                { 
+                    Values = new decimal[] { manualValue }, 
+                    Name = $"Manual ({manualPercentage:F1}%)",
+                    Fill = new SolidColorPaint(SKColor.Parse("#F59E0B")),
+                    DataLabelsSize = 16,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    DataLabelsFormatter = point => point.StackedValue!.Share > 0.01 ? $"{point.StackedValue!.Share:P1}" : ""
+                }
             };
         }
         catch (Exception ex)
@@ -483,29 +604,31 @@ public partial class DashboardViewModel : ViewModelBase
         
         // Agrupar criptomonedas por símbolo base (eliminando el tag [EARNING])
         var cryptoGroups = CryptoInvestments
-            .GroupBy(i => {
+            .GroupBy(vm => {
                 // Extraer símbolo base: "BITCOIN [EARNING]" → "BITCOIN"
-                var name = i.Name.ToUpper();
+                var name = vm.Investment.Name.ToUpper();
                 var earningIndex = name.IndexOf(" [EARNING]");
                 return earningIndex >= 0 ? name.Substring(0, earningIndex) : name;
             })
             .Select(g => {
                 // Calcular una vez para evitar múltiples iteraciones
-                var totalInvested = g.Sum(i => i.TotalPurchaseValue);
-                var currentValue = g.Sum(i => i.CurrentValue);
+                var totalInvested = g.Sum(vm => vm.Investment.TotalPurchaseValue);
+                var currentValue = g.Sum(vm => vm.Investment.CurrentValue);
+                var firstInvestment = g.First();
                 
                 return new CryptoSummary
                 {
                     Symbol = g.Key,
-                    TotalQuantity = g.Sum(i => i.Quantity),
+                    TotalQuantity = g.Sum(vm => vm.Investment.Quantity),
                     TotalInvested = totalInvested,
                     CurrentValue = currentValue,
-                    CurrentPrice = g.First().CurrentPrice,
-                    ProfitLoss = g.Sum(i => i.ProfitLoss),
+                    CurrentPrice = firstInvestment.Investment.CurrentPrice,
+                    ProfitLoss = g.Sum(vm => vm.Investment.ProfitLoss),
                     ProfitLossPercentage = totalInvested > 0 
                         ? (currentValue - totalInvested) / totalInvested * 100 
                         : 0,
-                    ImageUrl = g.First().ImageUrl
+                    ImageUrl = firstInvestment.Investment.ImageUrl,
+                    ImageBitmap = firstInvestment.ImageBitmap
                 };
             })
             .OrderByDescending(c => c.CurrentValue)
@@ -515,6 +638,62 @@ public partial class DashboardViewModel : ViewModelBase
         {
             CryptoSummaries.Add(crypto);
             Console.WriteLine($"   💰 {crypto.Symbol}: {crypto.TotalQuantity:N8} unidades = ${crypto.CurrentValue:N2}");
+        }
+    }
+    
+    /// <summary>
+    /// Actualiza el mensaje de la mascota según el rendimiento del portafolio
+    /// </summary>
+    private void UpdateMascotMessage()
+    {
+        if (TotalInvestments == 0)
+        {
+            MascotMessage = "Apenas escapando de la pobreza extrema 🥲";
+            return;
+        }
+        
+        var messages = new[]
+        {
+            // Mensajes para ganancias grandes (>10%)
+            (condition: ProfitLossPercentage > 10, messages: new[]
+            {
+                $"¡Increíble, pero sigues siendo pobre  ! +{ProfitLossPercentage:F1}% 🎉",
+                $"¡Vas excelente! +{ProfitLossPercentage:F1}% 💰",
+                $"¡Cada dia menos pobre! +{ProfitLossPercentage:F1}% 🏆"
+            }),
+            
+            // Mensajes para ganancias moderadas (0-10%)
+            (condition: ProfitLossPercentage > 0, messages: new[]
+            {
+                $"¡Buen trabajo! +{ProfitLossPercentage:F1}% 📈",
+                $"Vas por buen camino +{ProfitLossPercentage:F1}% ✨",
+                $"¡Sigue invirtiendo! +{ProfitLossPercentage:F1}% 💪"
+            }),
+            
+            // Mensajes para pérdidas pequeñas (0 a -5%)
+            (condition: ProfitLossPercentage >= -5, messages: new[]
+            {
+                "¡No te preocupes, es temporal! 💪",
+                "El mercado fluctúa, mantén la calma 🧘",
+                "Oportunidad para analizar y mejorar 🔍"
+            }),
+            
+            // Mensajes para pérdidas grandes (<-5%)
+            (condition: ProfitLossPercentage < -5, messages: new[]
+            {
+                $"Momento de revisar estrategia {ProfitLossPercentage:F1}% 🤔",
+                "¡Las crisis traen oportunidades! 💡",
+                "Analiza y ajusta tu portafolio 📊"
+            })
+        };
+        
+        // Encontrar el primer conjunto de mensajes que cumpla la condición
+        var messageSet = messages.FirstOrDefault(m => m.condition).messages;
+        if (messageSet != null)
+        {
+            // Seleccionar un mensaje aleatorio del conjunto
+            var random = new Random();
+            MascotMessage = messageSet[random.Next(messageSet.Length)];
         }
     }
 }
@@ -532,6 +711,7 @@ public class CryptoSummary
     public decimal ProfitLoss { get; set; }
     public decimal ProfitLossPercentage { get; set; }
     public string? ImageUrl { get; set; }
+    public Avalonia.Media.Imaging.Bitmap? ImageBitmap { get; set; }
 }
 
 /// <summary>

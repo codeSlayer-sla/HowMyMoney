@@ -7,5 +7,6 @@ public enum AssetType
 {
     Criptomoneda,
     SkinCSGO,
+    Accion,
     Manual
 }

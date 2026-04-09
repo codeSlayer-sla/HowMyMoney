@@ -3,9 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:HowsMyMoney.ViewModels"
+             xmlns:converters="using:HowsMyMoney.Converters"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              x:Class="HowsMyMoney.Views.AddInvestmentView"
              x:DataType="vm:AddInvestmentViewModel">
+
+    <UserControl.Resources>
+        <converters:UrlToBitmapConverter x:Key="UrlToBitmapConverter"/>
+        <converters:SkinCategoryConverter x:Key="SkinCategoryConverter"/>
+    </UserControl.Resources>
 
     <UserControl.Styles>
         <!-- Estilo para inputs modernos -->
@@ -125,6 +131,37 @@
                     </ComboBox>
                 </StackPanel>
 
+                <!-- Categoría de Skin (solo visible para skins) -->
+                <StackPanel Spacing="10" IsVisible="{Binding IsSkinAsset}">
+                    <TextBlock Text="🎯 Categoría" 
+                              FontWeight="SemiBold" 
+                              FontSize="15"
+                              Foreground="#FFFFFF"/>
+                    <ComboBox ItemsSource="{Binding SkinCategories}"
+                             SelectedItem="{Binding SelectedSkinCategory}"
+                             HorizontalAlignment="Stretch"
+                             Padding="12"
+                             FontSize="14"
+                             Background="#3C3C3C"
+                             BorderBrush="#6B6B6B"
+                             BorderThickness="2"
+                             Foreground="#FFFFFF">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource SkinCategoryConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <ComboBox.Styles>
+                            <Style Selector="ComboBox:pointerover /template/ Border#Background">
+                                <Setter Property="BorderBrush" Value="#10B981"/>
+                            </Style>
+                            <Style Selector="ComboBox:focus /template/ Border#Background">
+                                <Setter Property="BorderBrush" Value="#10B981"/>
+                            </Style>
+                        </ComboBox.Styles>
+                    </ComboBox>
+                </StackPanel>
+
                 <!-- Nombre y búsqueda -->
                 <StackPanel Spacing="10">
                     <TextBlock Text="💰 Nombre del Activo" 
@@ -193,7 +230,7 @@
                                                        ClipToBounds="True"
                                                        Background="#3C3C3C"
                                                        Margin="0,0,12,0">
-                                                    <Image Source="{Binding ImageUrl}" 
+                                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToBitmapConverter}}" 
                                                           Stretch="UniformToFill"/>
                                                 </Border>
                                                 

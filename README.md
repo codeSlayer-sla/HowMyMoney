@@ -1,4 +1,253 @@
-# 💰 HowsMyMoney - Gestor de Inversiones Personales
+# HowsMyMoney
+
+Aplicación de escritorio multiplataforma para seguimiento de inversiones personales.
+Permite registrar y monitorear:
+
+- Criptomonedas
+- Acciones y ETFs
+- Skins de CS:GO
+- Activos manuales
+
+La app calcula valor actual, ganancia/pérdida, rendimiento porcentual y muestra un dashboard con resumen, gráficos y vistas específicas por mercado.
+
+## Qué hace
+
+- **Dashboard**: muestra el estado general del portafolio.
+- **Monitoreo de mercados**: permite activar Crypto, Stocks y CS:GO desde una sola vista.
+- **Actualización de precios**: refresca valores de mercado usando APIs públicas.
+- **Persistencia local**: guarda inversiones e imágenes en SQLite para no volver a descargarlas.
+- **Caché de imágenes**: descarga el icono una vez y luego lo reutiliza desde la base de datos.
+- **Caché de precios**: evita repetir consultas innecesarias y reduce riesgo de rate limiting.
+
+## Tecnologías
+
+- `.NET 7`
+- `Avalonia UI`
+- `Entity Framework Core` + `SQLite`
+- `CommunityToolkit.Mvvm`
+- `LiveCharts`
+- `SkiaSharp`
+
+## Arquitectura general
+
+```text
+┌───────────────────────────────┐
+│           MainWindow          │
+└───────────────┬───────────────┘
+                │
+                v
+┌───────────────────────────────┐
+│      MainWindowViewModel      │
+│  controla navegación y carga  │
+└───────┬─────────┬───────┬─────┘
+        │         │       │
+        v         v       v
+┌────────────┐ ┌──────────────┐ ┌──────────────────┐
+│ Dashboard  │ │ AddInvestment │ │ MarketMonitor    │
+│   View     │ │     View      │ │      View        │
+└─────┬──────┘ └──────┬───────┘ └────────┬─────────┘
+      │               │                  │
+      v               v                  v
+┌───────────────────────────────────────────────────┐
+│                 ViewModels                        │
+│ calculan estado, comandos y ordenan cargas         │
+└───────────────┬───────────────────────┬───────────┘
+                │                       │
+                v                       v
+┌───────────────────────────────┐  ┌───────────────────────────────┐
+│          Services             │  │           SQLite              │
+│ APIs, precios, imágenes,      │  │ inversiones + caché imágenes   │
+│ exportación y persistencia     │  │                               │
+└───────────────┬───────────────┘  └───────────────────────────────┘
+                │
+                v
+┌───────────────────────────────────────────────────┐
+│        APIs públicas / recursos remotos           │
+└───────────────────────────────────────────────────┘
+```
+
+## Flujo de procesos
+
+```text
+Login -> Splash -> Dashboard
+                │
+                ├──> Carga inversiones desde DB
+                ├──> Consulta precios de mercado
+                ├──> Carga imágenes desde caché/DB
+                ├──> Calcula métricas del portfolio
+                └──> Actualiza gráficos y resumen
+
+Dashboard -> Market Monitor
+                │
+                ├──> Crypto: consulta CoinGecko
+                ├──> Stocks: consulta Yahoo Finance
+                └──> CS:GO: consulta Steam Market / Skinport
+```
+
+## Diagrama de interacción entre componentes
+
+```text
+User
+  │
+  ▼
+Views (.axaml)
+  │ bindings / commands
+  ▼
+ViewModels
+  │ orchestrate data flow
+  ├─────────────► InvestmentService
+  │                 ├─ CoinGeckoService
+  │                 ├─ SkinportService
+  │                 ├─ StockService
+  │                 └─ ImageCacheService
+  │
+  ├─────────────► Dashboard calculations
+  │
+  └─────────────► MainWindowViewModel navigation
+                    │
+                    ▼
+                  Views
+```
+
+## Consultas a nivel de red
+
+### 1) Criptomonedas
+
+Archivo: `Services/CoinGeckoService.cs`
+
+Consultas usadas:
+
+- `GET https://api.coingecko.com/api/v3/coins/markets`
+- `GET https://api.coingecko.com/api/v3/simple/price`
+- `GET https://api.coingecko.com/api/v3/coins/{id}`
+- `GET https://api.coingecko.com/api/v3/search`
+
+Uso:
+
+- obtiene top cryptos
+- obtiene precio individual cuando hace falta
+- obtiene imagen y metadatos del activo
+- busca monedas por texto
+
+### 2) Acciones y ETFs
+
+Archivo: `Services/StockService.cs`
+
+Consultas usadas:
+
+- `GET https://query2.finance.yahoo.com/v1/finance/search?q=...`
+- `GET https://query1.finance.yahoo.com/v8/finance/chart/{symbol}`
+- `GET https://logo.clearbit.com/{domain}.com`
+
+Uso:
+
+- busca acciones/ETFs por nombre o símbolo
+- consulta el precio actual
+- obtiene el logo de la empresa
+
+### 3) Skins de CS:GO
+
+Archivo: `Services/SkinportService.cs`
+
+Consultas usadas:
+
+- `GET https://steamcommunity.com/market/search/render/`
+- `GET` a endpoints auxiliares de Steam Market para precios y resultados
+- `GET https://community.cloudflare.steamstatic.com/economy/image/...`
+
+Uso:
+
+- busca items del market
+- obtiene precio real
+- obtiene imagen del item
+
+### 4) Imágenes cacheadas
+
+Archivo: `Services/ImageCacheService.cs`
+
+Comportamiento:
+
+- busca primero en `ImageCaches`
+- si no existe, descarga la imagen
+- si la descarga falla por SSL o red, genera un placeholder local
+- guarda el resultado en SQLite
+- reutiliza la imagen en siguientes arranques
+
+### 5) Base de datos local
+
+Archivo: `Data/InvestmentDbContext.cs`
+
+Persistencia:
+
+- `Investments`
+- `PriceHistory`
+- `ImageCaches`
+
+La base de datos evita depender del estado de cada arranque y permite que los iconos ya descargados se reutilicen sin volver a consultar el origen.
+
+## Flujo de carga de imágenes
+
+```text
+InvestmentViewModel
+  │
+  ├─ si ImageUrl está en caché -> usa bytes de SQLite
+  │
+  ├─ si ImageUrl no está en caché -> ImageCacheService descarga 1 vez
+  │
+  ├─ si falla SSL/red -> genera placeholder local y lo guarda
+  │
+  └─ entrega Bitmap a la UI
+```
+
+## Flujo de actualización de precios
+
+```text
+DashboardViewModel / MarketMonitorViewModel
+  │
+  ├─ llama InvestmentService o servicios de mercado
+  │
+  ├─ consulta API remota según tipo de activo
+  │
+  ├─ aplica caché / rate limit / throttling
+  │
+  └─ actualiza colecciones enlazadas a la UI
+```
+
+## Cómo correr la app
+
+```bash
+dotnet restore
+dotnet build
+dotnet run
+```
+
+## Estructura principal
+
+```text
+Models/        datos y entidades EF
+Data/          contexto de SQLite
+Services/      APIs, imágenes, exportación
+ViewModels/    lógica MVVM
+Views/         interfaces Avalonia
+Migrations/    esquema de base de datos
+```
+
+## Notas de diseño
+
+- La UI está pensada para ser responsive.
+- Las vistas usan `WrapPanel`, `ScrollViewer` y grids con anchos definidos cuando hace falta mantener columnas alineadas.
+- El dashboard prioriza consistencia visual y lectura rápida de métricas.
+
+## Problemas que resuelve
+
+- Evita descargar imágenes en cada inicio.
+- Reduce llamadas innecesarias a APIs públicas.
+- Mantiene precios y logos persistidos localmente.
+- Unifica monitoreo de varios mercados en una sola app.
+
+## Licencia
+
+MIT# 💰 HowsMyMoney - Gestor de Inversiones Personales
 
 ![.NET](https://img.shields.io/badge/.NET-7.0-512BD4?logo=.net)
 ![Avalonia](https://img.shields.io/badge/Avalonia-11.3-8B44AC)
@@ -13,7 +262,7 @@ Una aplicación de escritorio multiplataforma para gestionar tus inversiones per
   - 🎮 Skins de CS:GO (Skinport API)
   - 📝 Activos manuales personalizados
 
-- 📊 **Visualización avanzada**
+- 📊 **Visualización avanzada**>
   - Dashboard con resumen completo del portfolio
   - Gráficos de rendimiento mensual
   - Distribución de activos por tipo
