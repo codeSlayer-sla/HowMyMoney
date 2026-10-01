@@ -13,7 +13,7 @@ namespace HowsMyMoney.Services;
 /// <summary>
 /// Servicio para exportar datos a CSV
 /// </summary>
-public class CsvExportService
+public class CsvExportService : ICsvExportService
 {
     /// <summary>
     /// Exporta inversiones a un archivo CSV

@@ -9,14 +9,17 @@ using HowsMyMoney.Models;
 
 namespace HowsMyMoney.Services;
 
-public class StockService
+public class StockService : IStockService
 {
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl = "https://query1.finance.yahoo.com/v8/finance/chart/";
-    
-    public StockService()
+
+    /// <summary>
+    /// Permite inyectar un HttpClient (ej. con un handler falso en tests).
+    /// </summary>
+    public StockService(HttpClient? httpClient = null)
     {
-        _httpClient = new HttpClient();
+        _httpClient = httpClient ?? new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
     }
     

@@ -21,7 +21,7 @@ La app calcula valor actual, ganancia/pérdida, rendimiento porcentual y muestra
 
 ## Tecnologías
 
-- `.NET 7`
+- `.NET 8`
 - `Avalonia UI`
 - `Entity Framework Core` + `SQLite`
 - `CommunityToolkit.Mvvm`
@@ -81,7 +81,7 @@ Dashboard -> Market Monitor
                 │
                 ├──> Crypto: consulta CoinGecko
                 ├──> Stocks: consulta Yahoo Finance
-                └──> CS:GO: consulta Steam Market / Skinport
+                └──> CS:GO: consulta LIS-Skins
 ```
 
 ## Diagrama de interacción entre componentes
@@ -97,7 +97,7 @@ ViewModels
   │ orchestrate data flow
   ├─────────────► InvestmentService
   │                 ├─ CoinGeckoService
-  │                 ├─ SkinportService
+  │                 ├─ LisSkinsService
   │                 ├─ StockService
   │                 └─ ImageCacheService
   │
@@ -147,19 +147,17 @@ Uso:
 
 ### 3) Skins de CS:GO
 
-Archivo: `Services/SkinportService.cs`
+Archivo: `Services/LisSkinsService.cs`
 
 Consultas usadas:
 
-- `GET https://steamcommunity.com/market/search/render/`
-- `GET` a endpoints auxiliares de Steam Market para precios y resultados
-- `GET https://community.cloudflare.steamstatic.com/economy/image/...`
+- `GET https://lis-skins.com/market_export_json/csgo.json` (price list público de LIS-Skins, sin API key)
 
 Uso:
 
-- busca items del market
-- obtiene precio real
-- obtiene imagen del item
+- descarga el price list completo de CS:GO/CS2 y lo cachea en memoria (10 min)
+- busca items por nombre (coincidencia parcial) sobre el price list cacheado
+- obtiene el precio actual de una skin específica
 
 ### 4) Imágenes cacheadas
 
@@ -249,7 +247,7 @@ Migrations/    esquema de base de datos
 
 MIT# 💰 HowsMyMoney - Gestor de Inversiones Personales
 
-![.NET](https://img.shields.io/badge/.NET-7.0-512BD4?logo=.net)
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=.net)
 ![Avalonia](https://img.shields.io/badge/Avalonia-11.3-8B44AC)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -259,7 +257,7 @@ Una aplicación de escritorio multiplataforma para gestionar tus inversiones per
 
 - ✅ **Gestión de múltiples tipos de inversiones**
   - 💎 Criptomonedas con precios en tiempo real (CoinGecko API)
-  - 🎮 Skins de CS:GO (Skinport API)
+  - 🎮 Skins de CS:GO (LIS-Skins API)
   - 📝 Activos manuales personalizados
 
 - 📊 **Visualización avanzada**>
@@ -287,12 +285,12 @@ Una aplicación de escritorio multiplataforma para gestionar tus inversiones per
 
 | Componente | Tecnología | Versión |
 |-----------|-----------|---------|
-| **Framework** | .NET | 7.0 |
+| **Framework** | .NET | 8.0 |
 | **UI** | Avalonia UI | 11.3.8 |
 | **Patrón** | MVVM | CommunityToolkit.Mvvm 8.2.1 |
-| **Base de Datos** | SQLite + EF Core | 7.0.14 |
+| **Base de Datos** | SQLite + EF Core | 8.0.11 |
 | **Gráficos** | LiveCharts2 | 2.0.0-rc4.5 |
-| **APIs** | CoinGecko, Skinport | HTTP/JSON |
+| **APIs** | CoinGecko, LIS-Skins | HTTP/JSON |
 | **Exportación** | CsvHelper | 30.0.1 |
 
 ### Estructura del Proyecto
@@ -307,7 +305,7 @@ HowsMyMoney/
 │   └── InvestmentDbContext.cs # Contexto de Entity Framework
 ├── Services/                  # Lógica de negocio
 │   ├── CoinGeckoService.cs   # API de criptomonedas
-│   ├── SkinportService.cs    # API de skins CS:GO
+│   ├── LisSkinsService.cs    # API de skins CS:GO
 │   ├── InvestmentService.cs  # Gestión de inversiones
 │   └── CsvExportService.cs   # Exportación de datos
 ├── ViewModels/               # ViewModels MVVM
@@ -328,7 +326,7 @@ Base de datos: ~/.local/share/HowsMyMoney/investments.db (Linux/macOS)
 
 ### Requisitos Previos
 
-- **.NET 7.0 SDK** o superior
+- **.NET 8.0 SDK** o superior
   - Descarga: https://dotnet.microsoft.com/download
   - Verifica la instalación: `dotnet --version`
 
@@ -369,7 +367,7 @@ dotnet publish -c Release -r win-x64 --self-contained
 dotnet publish -c Release -r linux-x64 --self-contained
 ```
 
-El ejecutable estará en `bin/Release/net7.0/{runtime}/publish/`
+El ejecutable estará en `bin/Release/net8.0/{runtime}/publish/`
 
 ## 📖 Guía de Uso
 
@@ -399,7 +397,7 @@ El ejecutable estará en `bin/Release/net7.0/{runtime}/publish/`
 - Haz clic en **"🔄 Actualizar Precios"** en el dashboard
 - Se sincronizarán automáticamente:
   - Criptomonedas desde CoinGecko
-  - Skins CS:GO desde Skinport
+  - Skins CS:GO desde LIS-Skins
   - Activos manuales mantienen su precio
 
 ### 4. Exportar Datos
@@ -417,10 +415,10 @@ El ejecutable estará en `bin/Release/net7.0/{runtime}/publish/`
 - **Sin API Key requerida** (limitado a 50 req/min)
 - **Documentación**: https://www.coingecko.com/en/api
 
-#### Skinport API (CS:GO Skins)
-- **Endpoint**: https://api.skinport.com/v1
-- **Sin API Key requerida** para datos públicos
-- **Documentación**: https://docs.skinport.com
+#### LIS-Skins API (CS:GO Skins)
+- **Endpoint**: https://lis-skins.com/market_export_json/csgo.json (price list público)
+- **Sin API Key requerida** para el price list
+- **Documentación**: https://lis-skins.stoplight.io/docs/lis-skins/dzq78x3edc19r-api-overview
 
 ### Personalizar Base de Datos
 
@@ -491,7 +489,7 @@ La aplicación calcula automáticamente:
 # Verifica la versión de .NET
 dotnet --version
 
-# Debe ser 7.0 o superior
+# Debe ser 8.0 o superior
 # Si no, instala desde: https://dotnet.microsoft.com/download
 ```
 
@@ -507,7 +505,7 @@ dotnet build
 - Verifica tu conexión a internet
 - Las APIs públicas tienen límites de tasa
 - CoinGecko: ~50 solicitudes por minuto
-- Skinport: Consulta su documentación
+- LIS-Skins: el price list se cachea 10 min, puede tardar en reflejar cambios recientes
 
 ### Base de datos corrupta
 ```bash
@@ -518,6 +516,23 @@ rm ~/.local/share/HowsMyMoney/investments.db
 # Windows:
 # Elimina: %LOCALAPPDATA%\HowsMyMoney\investments.db
 ```
+
+## ❓ Preguntas Frecuentes
+
+**¿Necesito internet para usar la app?**
+Solo para actualizar precios de criptos, acciones y skins. Los datos ya guardados se ven sin conexión.
+
+**¿Mis datos son privados?**
+Sí, todo se guarda localmente (SQLite). No se envía nada a servidores propios.
+
+**¿Cómo hago una copia de seguridad?**
+Copia el archivo `investments.db` (ver ubicación arriba) a un lugar seguro. Para restaurar, reemplaza el archivo por tu copia.
+
+**¿Qué pasa si borro una inversión?**
+Se elimina permanentemente de la base de datos.
+
+**¿Soporta múltiples monedas?**
+Actualmente solo USD.
 
 ## 🤝 Contribuciones
 
@@ -554,7 +569,7 @@ Desarrollado con ❤️ para gestionar inversiones personales de forma simple y 
 ## 🙏 Agradecimientos
 
 - **CoinGecko** - API gratuita de criptomonedas
-- **Skinport** - API de precios de skins CS:GO
+- **LIS-Skins** - API de precios de skins CS:GO
 - **Avalonia UI** - Framework multiplataforma
 - **LiveCharts2** - Librería de gráficos
 - **Entity Framework Core** - ORM para .NET

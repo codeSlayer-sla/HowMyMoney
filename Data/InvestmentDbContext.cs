@@ -14,22 +14,42 @@ public class InvestmentDbContext : DbContext
     public DbSet<Investment> Investments { get; set; } = null!;
     public DbSet<PriceHistory> PriceHistories { get; set; } = null!;
     public DbSet<ImageCache> ImageCaches { get; set; } = null!;
-    
+
+    /// <summary>
+    /// Constructor de producción: usa el archivo SQLite bajo LocalApplicationData.
+    /// </summary>
+    public InvestmentDbContext()
+    {
+    }
+
+    /// <summary>
+    /// Constructor para tests: permite pasar opciones propias (ej. SQLite en memoria)
+    /// en vez del archivo real de producción.
+    /// </summary>
+    public InvestmentDbContext(DbContextOptions<InvestmentDbContext> options) : base(options)
+    {
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+        if (optionsBuilder.IsConfigured)
+        {
+            return;
+        }
+
         var dbPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "HowsMyMoney",
             "investments.db"
         );
-        
+
         // Crear directorio si no existe
         var directory = Path.GetDirectoryName(dbPath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
         }
-        
+
         optionsBuilder.UseSqlite($"Data Source={dbPath}");
     }
     

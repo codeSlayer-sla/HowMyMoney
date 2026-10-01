@@ -12,10 +12,10 @@ namespace HowsMyMoney.ViewModels;
 
 public partial class AddInvestmentViewModel : ViewModelBase
 {
-    private readonly InvestmentService _investmentService;
-    private readonly CoinGeckoService _coinGeckoService;
-    private readonly SkinportService _skinportService;
-    private readonly StockService _stockService;
+    private readonly IInvestmentService _investmentService;
+    private readonly ICoinGeckoService _coinGeckoService;
+    private readonly ILisSkinsService _lisSkinsService;
+    private readonly IStockService _stockService;
     
     [ObservableProperty]
     private string _name = string.Empty;
@@ -86,12 +86,16 @@ public partial class AddInvestmentViewModel : ViewModelBase
     
     public List<AssetType> AssetTypes { get; } = Enum.GetValues<AssetType>().ToList();
     
-    public AddInvestmentViewModel()
+    public AddInvestmentViewModel(
+        IInvestmentService investmentService,
+        ICoinGeckoService coinGeckoService,
+        ILisSkinsService lisSkinsService,
+        IStockService stockService)
     {
-        _investmentService = new InvestmentService();
-        _coinGeckoService = new CoinGeckoService();
-        _skinportService = new SkinportService();
-        _stockService = new StockService();
+        _investmentService = investmentService;
+        _coinGeckoService = coinGeckoService;
+        _lisSkinsService = lisSkinsService;
+        _stockService = stockService;
     }
     
     [RelayCommand]
@@ -167,7 +171,7 @@ public partial class AddInvestmentViewModel : ViewModelBase
             else if (SelectedAssetType == AssetType.SkinCSGO)
             {
                 Console.WriteLine($"DEBUG: Entrando a búsqueda de skins CS:GO - Categoría: {SelectedSkinCategory}");
-                var skins = await _skinportService.SearchSkinsAsync(Name, SelectedSkinCategory);
+                var skins = await _lisSkinsService.SearchSkinsAsync(Name, SelectedSkinCategory);
                 Console.WriteLine($"DEBUG: Se encontraron {skins.Count} skins");
                 
                 // Limpiar resultados anteriores

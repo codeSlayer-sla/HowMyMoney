@@ -1,0 +1,151 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="using:HowsMyMoney.ViewModels"
+                    xmlns:icons="using:Material.Icons.Avalonia">
+
+    <!--
+    Fila compartida de la lista de inversiones del Dashboard.
+    Antes esta misma fila estaba pegada 4 veces (cripto/skins/acciones/manual) en
+    DashboardView.axaml; ahora vive en un solo lugar y las 4 secciones la reusan
+    vía ItemTemplate="{StaticResource InvestmentRowTemplate}".
+
+    Nota: el botón Eliminar sube por el árbol visual hasta el UserControl que lo
+    contiene (DashboardView) para llegar a RequestDeleteInvestmentCommand (abre el
+    diálogo de confirmación, no borra directo), porque el
+    DataContext de esta fila es el InvestmentViewModel del item, no el Dashboard.
+    Por eso este archivo se declara como ResourceDictionary (no como UserControl):
+    un UserControl propio rompería ese "$parent[UserControl]" al meter un límite
+    de árbol visual nuevo en el medio.
+    -->
+    <vm:ProfitLossColorConverter x:Key="ProfitLossColorConverter"/>
+
+    <DataTemplate x:Key="InvestmentRowTemplate" x:DataType="vm:InvestmentViewModel">
+        <Border Background="#252526"
+               CornerRadius="8"
+               Padding="20"
+               Margin="0,0,0,12"
+               BorderBrush="#3E3E42"
+               BorderThickness="1">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <Grid ColumnDefinitions="280,140,140,140,180,60" MinWidth="940">
+
+                    <!-- Columna 1: Imagen, Nombre y Tipo -->
+                    <Grid Grid.Column="0" ColumnDefinitions="Auto,*" Margin="0,0,20,0">
+                        <Border Grid.Column="0"
+                               Width="50"
+                               Height="50"
+                               CornerRadius="25"
+                               ClipToBounds="True"
+                               Background="#3C3C3C"
+                               Margin="0,0,15,0"
+                               VerticalAlignment="Center">
+                            <Image Source="{Binding ImageBitmap}"
+                                  Stretch="UniformToFill"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                   VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Investment.Name}"
+                                      FontSize="16"
+                                      FontWeight="Bold"
+                                      Foreground="White"
+                                      TextWrapping="Wrap"
+                                      TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Investment.AssetType}"
+                                      FontSize="12"
+                                      Foreground="#AAAAAA"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Columna 2: Cantidad -->
+                    <StackPanel Grid.Column="1" Margin="0,0,15,0" VerticalAlignment="Center">
+                        <TextBlock Text="Cantidad"
+                                  FontSize="11"
+                                  FontWeight="Medium"
+                                  Foreground="#AAAAAA"
+                                  Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Investment.Quantity, StringFormat='{}{0:N4}'}"
+                                  FontSize="15"
+                                  FontWeight="SemiBold"
+                                  Foreground="White"/>
+                    </StackPanel>
+
+                    <!-- Columna 3: Total Invertido -->
+                    <StackPanel Grid.Column="2" Margin="0,0,15,0" VerticalAlignment="Center">
+                        <TextBlock Text="Total Invertido"
+                                  FontSize="11"
+                                  FontWeight="Medium"
+                                  Foreground="#AAAAAA"
+                                  Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Investment.TotalPurchaseValue, StringFormat='${0:N2}'}"
+                                  FontSize="15"
+                                  FontWeight="Bold"
+                                  Foreground="#FFB347"/>
+                    </StackPanel>
+
+                    <!-- Columna 4: Valor Actual -->
+                    <StackPanel Grid.Column="3" Margin="0,0,15,0" VerticalAlignment="Center">
+                        <TextBlock Text="Valor Actual"
+                                  FontSize="11"
+                                  FontWeight="Medium"
+                                  Foreground="#AAAAAA"
+                                  Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Investment.CurrentValue, StringFormat='${0:N2}'}"
+                                  FontSize="15"
+                                  FontWeight="Bold"
+                                  Foreground="#4FC3F7"/>
+                    </StackPanel>
+
+                    <!-- Columna 5: Ganancia/Pérdida y Porcentaje -->
+                    <Border Grid.Column="4"
+                           Background="#3E3E42"
+                           CornerRadius="8"
+                           Padding="15,12"
+                           Margin="0,0,10,0"
+                           VerticalAlignment="Center">
+                        <StackPanel>
+                            <TextBlock Text="Ganancia/Pérdida"
+                                      FontSize="11"
+                                      Foreground="#AAAAAA"
+                                      FontWeight="Medium"
+                                      Margin="0,0,0,4"
+                                      HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Investment.ProfitLoss, StringFormat='${0:N2}'}"
+                                      FontSize="18"
+                                      FontWeight="Bold"
+                                      Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                      HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Investment.ProfitLossPercentage, StringFormat='({0:F2}%)'}"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      Foreground="{Binding Investment.ProfitLoss, Converter={StaticResource ProfitLossColorConverter}}"
+                                      HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Columna 6: Botón Eliminar -->
+                    <Button Grid.Column="5"
+                           Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).RequestDeleteInvestmentCommand}"
+                           CommandParameter="{Binding}"
+                           Width="46"
+                           Height="46"
+                           Padding="10,8"
+                           Background="#DC2626"
+                           Foreground="White"
+                           CornerRadius="8"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           HorizontalContentAlignment="Center"
+                           ToolTip.Tip="Eliminar inversión">
+                        <icons:MaterialIcon Kind="Delete" Width="20" Height="20"/>
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#B91C1C"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>

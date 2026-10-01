@@ -198,7 +198,7 @@
         </StackPanel>
         
         <!-- Versión en esquina -->
-        <TextBlock Text="v1.0.0" 
+        <TextBlock Text="v0.1.0"
                   FontSize="11" 
                   Foreground="#404040"
                   Margin="20"

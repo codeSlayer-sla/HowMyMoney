@@ -11,7 +11,7 @@ namespace HowsMyMoney.Services;
 /// <summary>
 /// Servicio para obtener precios de criptomonedas usando CoinGecko API
 /// </summary>
-public class CoinGeckoService
+public class CoinGeckoService : ICoinGeckoService
 {
     private readonly HttpClient _httpClient;
     private const string BaseUrl = "https://api.coingecko.com/api/v3";
@@ -19,10 +19,13 @@ public class CoinGeckoService
     private static readonly TimeSpan MinTimeBetweenCalls = TimeSpan.FromSeconds(2);
     private static readonly Dictionary<string, (DateTime timestamp, List<CryptoFullInfo> data)> _priceCache = new();
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(1);
-    
-    public CoinGeckoService()
+
+    /// <summary>
+    /// Permite inyectar un HttpClient (ej. con un handler falso en tests).
+    /// </summary>
+    public CoinGeckoService(HttpClient? httpClient = null)
     {
-        _httpClient = new HttpClient();
+        _httpClient = httpClient ?? new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "HowsMyMoney/1.0");
     }
     

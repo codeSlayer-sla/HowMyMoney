@@ -34,14 +34,17 @@ public partial class MainWindowViewModel : ViewModelBase
     public AddInvestmentViewModel AddInvestmentViewModel { get; }
     public MarketMonitorViewModel MarketMonitorViewModel { get; }
     
-    public MainWindowViewModel()
+    public MainWindowViewModel(
+        DashboardViewModel dashboardViewModel,
+        AddInvestmentViewModel addInvestmentViewModel,
+        MarketMonitorViewModel marketMonitorViewModel)
     {
         LoginViewModel = new LoginViewModel(OnLoginSuccess);
         SplashViewModel = new SplashViewModel();
-        DashboardViewModel = new DashboardViewModel();
-        AddInvestmentViewModel = new AddInvestmentViewModel();
-        MarketMonitorViewModel = new MarketMonitorViewModel();
-        
+        DashboardViewModel = dashboardViewModel;
+        AddInvestmentViewModel = addInvestmentViewModel;
+        MarketMonitorViewModel = marketMonitorViewModel;
+
         // Vista inicial: Login
         _currentView = LoginViewModel;
         Console.WriteLine("🔐 Mostrando pantalla de login");

@@ -43,7 +43,7 @@ function build_app() {
     echo "Compilando..."
     dotnet build -c Release
     echo -e "${GREEN}✓ Compilación exitosa${NC}"
-    echo "Ejecutable en: bin/Release/net7.0/"
+    echo "Ejecutable en: bin/Release/net8.0/"
 }
 
 function publish_app() {
@@ -80,7 +80,7 @@ function publish_app() {
     dotnet publish -c Release -r $RUNTIME --self-contained -p:PublishSingleFile=true
     
     echo -e "${GREEN}✓ Publicación exitosa${NC}"
-    echo "Ejecutable en: bin/Release/net7.0/$RUNTIME/publish/"
+    echo "Ejecutable en: bin/Release/net8.0/$RUNTIME/publish/"
 }
 
 function clean_app() {

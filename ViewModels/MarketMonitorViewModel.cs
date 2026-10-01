@@ -13,8 +13,8 @@ namespace HowsMyMoney.ViewModels;
 
 public partial class MarketMonitorViewModel : ViewModelBase
 {
-    private readonly CoinGeckoService _coinGeckoService;
-    private readonly StockService _stockService;
+    private readonly ICoinGeckoService _coinGeckoService;
+    private readonly IStockService _stockService;
     private CancellationTokenSource? _updateCancellationTokenSource;
     
     [ObservableProperty]
@@ -53,10 +53,10 @@ public partial class MarketMonitorViewModel : ViewModelBase
     private DateTime _lastRefresh = DateTime.MinValue;
     private static readonly TimeSpan MinRefreshInterval = TimeSpan.FromSeconds(30);
 
-    public MarketMonitorViewModel()
+    public MarketMonitorViewModel(ICoinGeckoService coinGeckoService, IStockService stockService)
     {
-        _coinGeckoService = new CoinGeckoService();
-        _stockService = new StockService();
+        _coinGeckoService = coinGeckoService;
+        _stockService = stockService;
     }
 
     public async Task LoadMarkets()

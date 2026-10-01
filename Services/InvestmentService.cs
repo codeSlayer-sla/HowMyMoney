@@ -11,25 +11,37 @@ namespace HowsMyMoney.Services;
 /// <summary>
 /// Servicio para gestionar inversiones
 /// </summary>
-public class InvestmentService
+public class InvestmentService : IInvestmentService
 {
     private readonly InvestmentDbContext _context;
-    private readonly CoinGeckoService _coinGeckoService;
-    private readonly SkinportService _skinportService;
-    private readonly StockService _stockService;
-    private readonly ImageCacheService _imageCacheService;
-    
-    public InvestmentService()
+    private readonly ICoinGeckoService _coinGeckoService;
+    private readonly ILisSkinsService _lisSkinsService;
+    private readonly IStockService _stockService;
+    private readonly IImageCacheService _imageCacheService;
+    private readonly ISteamIconService _steamIconService;
+
+    /// <summary>
+    /// El parámetro dbContext es opcional para no romper el uso normal (composition root);
+    /// en tests se puede pasar un contexto propio (ej. SQLite en memoria).
+    /// </summary>
+    public InvestmentService(
+        ICoinGeckoService coinGeckoService,
+        ILisSkinsService lisSkinsService,
+        IStockService stockService,
+        IImageCacheService imageCacheService,
+        ISteamIconService steamIconService,
+        InvestmentDbContext? dbContext = null)
     {
-        _context = new InvestmentDbContext();
-        _coinGeckoService = new CoinGeckoService();
-        _skinportService = new SkinportService();
-        _stockService = new StockService();
-        _imageCacheService = new ImageCacheService();
-        
+        _context = dbContext ?? new InvestmentDbContext();
+        _coinGeckoService = coinGeckoService;
+        _lisSkinsService = lisSkinsService;
+        _stockService = stockService;
+        _imageCacheService = imageCacheService;
+        _steamIconService = steamIconService;
+
         // Asegurar que la base de datos existe
         _context.Database.EnsureCreated();
-        
+
         // Migrar esquema para agregar campos Day y Week
         _context.MigrateDatabaseSchema();
     }
@@ -190,46 +202,39 @@ public class InvestmentService
     private async Task UpdateSkinAssetAsync(Investment investment, bool forceImageUpdate)
     {
         Console.WriteLine($"Actualizando skin CS:GO: {investment.Name}");
-        
+
+        var price = await _lisSkinsService.GetSkinPriceAsync(investment.Name);
+        if (price.HasValue)
+        {
+            investment.CurrentPrice = price.Value;
+            Console.WriteLine($"✓ Precio actualizado: ${price.Value}");
+        }
+        else
+        {
+            Console.WriteLine($"⚠ No se pudo obtener precio para skin CS:GO: {investment.Name}");
+        }
+
+        // LIS-Skins no provee imágenes (su price list solo trae nombre/precio), así que
+        // el ícono se resuelve por separado contra Steam Community Market, una sola vez
+        // por skin: en cuanto quede guardada una URL válida acá, HasInvalidImageUrl la
+        // deja de considerar "necesita imagen" y no se vuelve a golpear Steam para esta skin.
         bool needsImage = string.IsNullOrEmpty(investment.ImageUrl) || HasInvalidImageUrl(investment);
-        
         if (needsImage)
         {
             if (HasInvalidImageUrl(investment))
             {
                 Console.WriteLine($"  ⚠ Imagen inválida detectada, buscando nueva...");
             }
-            else
+
+            var iconUrl = await _steamIconService.GetIconUrlAsync(investment.Name);
+            if (!string.IsNullOrEmpty(iconUrl))
             {
-                Console.WriteLine($"  🔍 Skin sin imagen, buscando info completa...");
-            }
-            
-            var skins = await _skinportService.SearchSkinsAsync(investment.Name);
-            var skin = skins.FirstOrDefault(s => s.MarketHashName == investment.Name);
-            
-            if (skin != null)
-            {
-                investment.CurrentPrice = skin.MinPrice;
-                investment.ImageUrl = skin.ImageUrl;
-                Console.WriteLine($"✓ Precio: ${skin.MinPrice}, Imagen: {skin.ImageUrl}");
+                investment.ImageUrl = iconUrl;
+                Console.WriteLine($"✓ Ícono de Steam resuelto: {iconUrl}");
             }
             else
             {
-                var price = await _skinportService.GetSkinPriceAsync(investment.Name);
-                if (price.HasValue)
-                {
-                    investment.CurrentPrice = price.Value;
-                    Console.WriteLine($"✓ Precio: ${price.Value}, ⚠ Sin imagen");
-                }
-            }
-        }
-        else
-        {
-            var price = await _skinportService.GetSkinPriceAsync(investment.Name);
-            if (price.HasValue)
-            {
-                investment.CurrentPrice = price.Value;
-                Console.WriteLine($"✓ Precio actualizado: ${price.Value}");
+                Console.WriteLine($"⚠ No se pudo resolver ícono de Steam para '{investment.Name}'");
             }
         }
     }

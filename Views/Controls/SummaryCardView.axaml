@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:HowsMyMoney.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="220" d:DesignHeight="110"
+             x:Class="HowsMyMoney.Views.Controls.SummaryCardView">
+
+    <Border Background="#2D2D30"
+           BorderBrush="{Binding $parent[controls:SummaryCardView].AccentBrush}"
+           BorderThickness="3,0,0,0"
+           CornerRadius="0"
+           Padding="16,14"
+           MinWidth="150">
+        <StackPanel Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Viewbox Width="16" Height="16">
+                    <Path Data="{Binding $parent[controls:SummaryCardView].IconData}"
+                         Fill="{Binding $parent[controls:SummaryCardView].AccentBrush}"/>
+                </Viewbox>
+                <TextBlock Text="{Binding $parent[controls:SummaryCardView].Label}"
+                          FontSize="11"
+                          Foreground="#9A9CA3"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="{Binding $parent[controls:SummaryCardView].Value}"
+                          FontSize="22"
+                          FontWeight="Medium"
+                          Foreground="{Binding $parent[controls:SummaryCardView].ValueBrush}"
+                          TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding $parent[controls:SummaryCardView].Trend}"
+                          FontSize="13"
+                          Foreground="{Binding $parent[controls:SummaryCardView].ValueBrush}"
+                          VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

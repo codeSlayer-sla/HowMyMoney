@@ -16,7 +16,7 @@ namespace HowsMyMoney.Services;
 /// <summary>
 /// Servicio para cachear imágenes en la base de datos
 /// </summary>
-public class ImageCacheService
+public class ImageCacheService : IImageCacheService
 {
     private readonly HttpClient _httpClient;
     private const int CACHE_EXPIRATION_DAYS = 30; // Expirar caché después de 30 días

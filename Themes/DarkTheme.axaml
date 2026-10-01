@@ -28,7 +28,17 @@
             <!-- Input Fields -->
             <SolidColorBrush x:Key="DarkInputBackground">#3C3C3C</SolidColorBrush>
             <SolidColorBrush x:Key="DarkInputBorder">#6B6B6B</SolidColorBrush>
+
+            <!--
+            Tokens de acento de las tarjetas de resumen del Dashboard
+            (Views/Controls/SummaryCardView, diseño "minimal con borde de acento").
+            Un solo color sólido por categoría en vez de un degradado de 3 tonos;
+            centralizarlos acá permite retocar la paleta en un solo lugar.
+            -->
+            <SolidColorBrush x:Key="SummaryCardPurpleAccent">#8B5CF6</SolidColorBrush>
+            <SolidColorBrush x:Key="SummaryCardBlueAccent">#3B82F6</SolidColorBrush>
+            <SolidColorBrush x:Key="SummaryCardGreenAccent">#10B981</SolidColorBrush>
         </Style.Resources>
     </Style>
-    
+
 </Styles>

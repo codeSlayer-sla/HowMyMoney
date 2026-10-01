@@ -16,8 +16,8 @@ namespace HowsMyMoney.ViewModels;
 
 public partial class DashboardViewModel : ViewModelBase
 {
-    private readonly InvestmentService _investmentService;
-    private readonly CsvExportService _csvExportService;
+    private readonly IInvestmentService _investmentService;
+    private readonly ICsvExportService _csvExportService;
     
     [ObservableProperty]
     private ObservableCollection<InvestmentViewModel> _investments = new();
@@ -33,7 +33,39 @@ public partial class DashboardViewModel : ViewModelBase
     
     [ObservableProperty]
     private ObservableCollection<InvestmentViewModel> _manualInvestments = new();
-    
+
+    /// <summary>Pestaña activa de la lista de inversiones por tipo de activo.</summary>
+    [ObservableProperty]
+    private AssetType _selectedInvestmentTab = AssetType.Criptomoneda;
+
+    public bool IsCryptoTabActive => SelectedInvestmentTab == AssetType.Criptomoneda;
+    public bool IsSkinTabActive => SelectedInvestmentTab == AssetType.SkinCSGO;
+    public bool IsStockTabActive => SelectedInvestmentTab == AssetType.Accion;
+    public bool IsManualTabActive => SelectedInvestmentTab == AssetType.Manual;
+
+    partial void OnSelectedInvestmentTabChanged(AssetType value)
+    {
+        OnPropertyChanged(nameof(IsCryptoTabActive));
+        OnPropertyChanged(nameof(IsSkinTabActive));
+        OnPropertyChanged(nameof(IsStockTabActive));
+        OnPropertyChanged(nameof(IsManualTabActive));
+    }
+
+    [RelayCommand]
+    private void SelectInvestmentTab(AssetType assetType)
+    {
+        SelectedInvestmentTab = assetType;
+    }
+
+    private bool CategoryHasInvestments(AssetType assetType) => assetType switch
+    {
+        AssetType.Criptomoneda => CryptoInvestments.Count > 0,
+        AssetType.SkinCSGO => SkinInvestments.Count > 0,
+        AssetType.Accion => StockInvestments.Count > 0,
+        AssetType.Manual => ManualInvestments.Count > 0,
+        _ => false
+    };
+
     [ObservableProperty]
     private ObservableCollection<CryptoSummary> _cryptoSummaries = new();
     
@@ -45,7 +77,13 @@ public partial class DashboardViewModel : ViewModelBase
     
     [ObservableProperty]
     private bool _isAdjustmentDialogOpen;
-    
+
+    [ObservableProperty]
+    private InvestmentViewModel? _investmentPendingDelete;
+
+    [ObservableProperty]
+    private bool _isDeleteConfirmationOpen;
+
     [ObservableProperty]
     private int _totalInvestments;
     
@@ -125,11 +163,11 @@ public partial class DashboardViewModel : ViewModelBase
     public bool IsPerformanceViewActive => ShowingPerformanceChart;
     public bool IsDistributionViewActive => !ShowingPerformanceChart;
     
-    public DashboardViewModel()
+    public DashboardViewModel(IInvestmentService investmentService, ICsvExportService csvExportService)
     {
-        _investmentService = new InvestmentService();
-        _csvExportService = new CsvExportService();
-        
+        _investmentService = investmentService;
+        _csvExportService = csvExportService;
+
         // LoadDataAsync será llamado explícitamente desde MainWindowViewModel
     }
     
@@ -184,7 +222,16 @@ public partial class DashboardViewModel : ViewModelBase
             }
             Console.WriteLine($"✓ DashboardViewModel: Investments.Count = {Investments.Count}");
             Console.WriteLine($"   📊 Crypto: {CryptoInvestments.Count}, Skins: {SkinInvestments.Count}, Stocks: {StockInvestments.Count}, Manual: {ManualInvestments.Count}");
-            
+
+            // Si la pestaña activa quedó sin inversiones, saltar a la primera categoría que sí tenga
+            if (!CategoryHasInvestments(SelectedInvestmentTab))
+            {
+                if (CryptoInvestments.Count > 0) SelectedInvestmentTab = AssetType.Criptomoneda;
+                else if (SkinInvestments.Count > 0) SelectedInvestmentTab = AssetType.SkinCSGO;
+                else if (StockInvestments.Count > 0) SelectedInvestmentTab = AssetType.Accion;
+                else if (ManualInvestments.Count > 0) SelectedInvestmentTab = AssetType.Manual;
+            }
+
             // Crear resumen de criptomonedas por tipo
             CreateCryptoSummary();
             
@@ -248,12 +295,35 @@ public partial class DashboardViewModel : ViewModelBase
         }
     }
     
+    /// <summary>
+    /// Pide confirmación antes de eliminar (el botón de la fila ya no borra directo).
+    /// </summary>
     [RelayCommand]
-    private async Task DeleteInvestmentAsync(InvestmentViewModel? investmentViewModel)
+    private void RequestDeleteInvestment(InvestmentViewModel? investmentViewModel)
     {
         if (investmentViewModel?.Investment == null) return;
-        
-        var investment = investmentViewModel.Investment;
+
+        InvestmentPendingDelete = investmentViewModel;
+        IsDeleteConfirmationOpen = true;
+    }
+
+    [RelayCommand]
+    private void CancelDeleteInvestment()
+    {
+        IsDeleteConfirmationOpen = false;
+        InvestmentPendingDelete = null;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmDeleteInvestmentAsync()
+    {
+        if (InvestmentPendingDelete?.Investment == null)
+        {
+            IsDeleteConfirmationOpen = false;
+            return;
+        }
+
+        var investment = InvestmentPendingDelete.Investment;
         try
         {
             await _investmentService.DeleteInvestmentAsync(investment.Id);
@@ -264,8 +334,13 @@ public partial class DashboardViewModel : ViewModelBase
         {
             StatusMessage = $"Error eliminando inversión: {ex.Message}";
         }
+        finally
+        {
+            IsDeleteConfirmationOpen = false;
+            InvestmentPendingDelete = null;
+        }
     }
-    
+
     [RelayCommand]
     private void OpenAdjustCryptoDialog(CryptoSummary? crypto)
     {

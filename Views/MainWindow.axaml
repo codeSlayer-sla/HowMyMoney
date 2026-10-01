@@ -20,10 +20,6 @@
         <converters:BoolToMenuIconConverter x:Key="BoolToMenuIconConverter"/>
     </Window.Resources>
 
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -262,7 +258,7 @@
                             <materialIcons:MaterialIcon Kind="CodeBraces" 
                                                        Width="16" Height="16" 
                                                        Foreground="#00AAFF"/>
-                            <TextBlock Text="v1.0.0" 
+                            <TextBlock Text="v0.1.0"
                                       FontSize="12" 
                                       Foreground="#8E8E93"
                                       FontWeight="SemiBold"
