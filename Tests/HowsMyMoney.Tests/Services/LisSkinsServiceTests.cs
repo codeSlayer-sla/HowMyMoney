@@ -85,6 +85,19 @@ public class LisSkinsServiceTests
     }
 
     [Fact]
+    public async Task GetTopSkinsAsync_ReturnsMostExpensiveFirst()
+    {
+        var service = CreateService(SamplePriceList);
+
+        var top = await service.GetTopSkinsAsync(2);
+
+        Assert.Equal(2, top.Count);
+        Assert.Equal("★ Karambit | Fade (Factory New)", top[0].MarketHashName);
+        Assert.Equal(900.00m, top[0].MinPrice);
+        Assert.Equal("AWP | Asiimov (Field-Tested)", top[1].MarketHashName);
+    }
+
+    [Fact]
     public async Task SearchSkinsAsync_CachesPriceList_SoSecondCallDoesNotHitNetworkAgain()
     {
         var handler = new FakeHttpMessageHandler(SamplePriceList);

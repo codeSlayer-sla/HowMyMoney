@@ -15,14 +15,20 @@ public partial class MarketMonitorViewModel : ViewModelBase
 {
     private readonly ICoinGeckoService _coinGeckoService;
     private readonly IStockService _stockService;
+    private readonly ILisSkinsService _lisSkinsService;
+    private readonly ISteamIconService _steamIconService;
+    private readonly IImageCacheService _imageCacheService;
     private CancellationTokenSource? _updateCancellationTokenSource;
-    
+
     [ObservableProperty]
-    private ObservableCollection<MarketData> _cryptoMarkets = new();
-    
+    private ObservableCollection<MarketDataViewModel> _cryptoMarkets = new();
+
     [ObservableProperty]
-    private ObservableCollection<MarketData> _stockMarkets = new();
-    
+    private ObservableCollection<MarketDataViewModel> _stockMarkets = new();
+
+    [ObservableProperty]
+    private ObservableCollection<MarketDataViewModel> _skinMarkets = new();
+
     [ObservableProperty]
     private bool _isCryptoEnabled = true;
     
@@ -48,15 +54,23 @@ public partial class MarketMonitorViewModel : ViewModelBase
     private bool _isFullscreenMode = false;
     
     [ObservableProperty]
-    private MarketData? _selectedMarket;
-    
+    private MarketDataViewModel? _selectedMarket;
+
     private DateTime _lastRefresh = DateTime.MinValue;
     private static readonly TimeSpan MinRefreshInterval = TimeSpan.FromSeconds(30);
 
-    public MarketMonitorViewModel(ICoinGeckoService coinGeckoService, IStockService stockService)
+    public MarketMonitorViewModel(
+        ICoinGeckoService coinGeckoService,
+        IStockService stockService,
+        ILisSkinsService lisSkinsService,
+        ISteamIconService steamIconService,
+        IImageCacheService imageCacheService)
     {
         _coinGeckoService = coinGeckoService;
         _stockService = stockService;
+        _lisSkinsService = lisSkinsService;
+        _steamIconService = steamIconService;
+        _imageCacheService = imageCacheService;
     }
 
     public async Task LoadMarkets()
@@ -76,7 +90,12 @@ public partial class MarketMonitorViewModel : ViewModelBase
             {
                 tasks.Add(LoadStockMarketsAsync());
             }
-            
+
+            if (IsSkinsEnabled)
+            {
+                tasks.Add(LoadSkinMarketsAsync());
+            }
+
             await Task.WhenAll(tasks);
             
             LastUpdate = DateTime.Now;
@@ -118,7 +137,7 @@ public partial class MarketMonitorViewModel : ViewModelBase
             
             Console.WriteLine($"📥 Recibidas {topCryptos.Count} cryptos del API");
             
-            var cryptoData = topCryptos.Select(info => new MarketData
+            var cryptoData = topCryptos.Select(info => new MarketDataViewModel(new MarketData
             {
                 Symbol = info.Symbol.ToUpper(),
                 Name = info.Name,
@@ -126,10 +145,11 @@ public partial class MarketMonitorViewModel : ViewModelBase
                 Change24h = info.PriceChange24h,
                 ChangePercent24h = info.PriceChangePercentage24h,
                 ImageUrl = info.ImageUrl ?? string.Empty,
-                MarketType = MarketType.Crypto
-            }).ToList();
-            
-            CryptoMarkets = new ObservableCollection<MarketData>(cryptoData);
+                MarketType = MarketType.Crypto,
+                MarketCap = info.MarketCap
+            }, _imageCacheService)).ToList();
+
+            CryptoMarkets = new ObservableCollection<MarketDataViewModel>(cryptoData);
             Console.WriteLine($"✓ {CryptoMarkets.Count} criptomonedas cargadas en CryptoMarkets");
             
             // Debug: imprimir las primeras 3
@@ -165,27 +185,30 @@ public partial class MarketMonitorViewModel : ViewModelBase
                 ("JPM", "JPMorgan Chase")
             };
             
-            var stockData = new List<MarketData>();
-            
-            foreach (var (symbol, name) in topStocks)
+            // Pedir las 10 cotizaciones en paralelo en vez de una por una
+            var stockTasks = topStocks.Select(async stock =>
             {
-                var price = await _stockService.GetStockPriceAsync(symbol);
-                if (price.HasValue)
-                {
-                    stockData.Add(new MarketData
+                var (symbol, name) = stock;
+                var quote = await _stockService.GetStockQuoteAsync(symbol);
+                return quote != null
+                    ? new MarketDataViewModel(new MarketData
                     {
                         Symbol = symbol,
                         Name = name,
-                        Price = price.Value,
-                        Change24h = 0, // Yahoo Finance API básica no proporciona esto fácilmente
-                        ChangePercent24h = 0,
-                        ImageUrl = $"https://logo.clearbit.com/{GetDomain(symbol)}.com",
+                        Price = quote.Price,
+                        Change24h = quote.Change,
+                        ChangePercent24h = quote.ChangePercent,
+                        ImageUrl = StockLogoHelper.GetLogoUrl(symbol),
                         MarketType = MarketType.Stocks
-                    });
-                }
-            }
-            
-            StockMarkets = new ObservableCollection<MarketData>(stockData);
+                        // MarketCap: no disponible en el endpoint básico de Yahoo que usamos.
+                    }, _imageCacheService)
+                    : null;
+            });
+
+            var stockResults = await Task.WhenAll(stockTasks);
+            var stockData = stockResults.Where(s => s != null).Cast<MarketDataViewModel>().ToList();
+
+            StockMarkets = new ObservableCollection<MarketDataViewModel>(stockData);
             Console.WriteLine($"✓ {StockMarkets.Count} acciones cargadas");
         }
         catch (Exception ex)
@@ -193,7 +216,44 @@ public partial class MarketMonitorViewModel : ViewModelBase
             Console.WriteLine($"❌ Error cargando stocks: {ex.Message}");
         }
     }
-    
+
+    private async Task LoadSkinMarketsAsync()
+    {
+        try
+        {
+            Console.WriteLine("🔫 Cargando Top Skins CS:GO...");
+
+            var topSkins = await _lisSkinsService.GetTopSkinsAsync(10);
+
+            // Solo 10 íconos, una vez por refresh, en paralelo: volumen bajo, no es
+            // lo mismo que resolver íconos por cada resultado de una búsqueda (eso sí
+            // podía ser 50 a la vez, por eso ahí se evita).
+            var skinIconTasks = topSkins.Select(skin => _steamIconService.GetIconUrlAsync(skin.MarketHashName));
+            var skinIcons = await Task.WhenAll(skinIconTasks);
+
+            var skinData = topSkins.Zip(skinIcons, (skin, iconUrl) => new MarketDataViewModel(new MarketData
+            {
+                Symbol = "CS:GO",
+                Name = skin.MarketHashName,
+                Price = skin.MinPrice,
+                Change24h = 0,
+                ChangePercent24h = 0,
+                ImageUrl = iconUrl ?? string.Empty,
+                MarketType = MarketType.Skins,
+                // Proxy de "tamaño de mercado" (no hay market cap real para skins):
+                // precio × unidades listadas en LIS-Skins.
+                MarketCap = skin.MinPrice * skin.ListedCount
+            }, _imageCacheService)).ToList();
+
+            SkinMarkets = new ObservableCollection<MarketDataViewModel>(skinData);
+            Console.WriteLine($"✓ {SkinMarkets.Count} skins cargadas");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error cargando skins: {ex.Message}");
+        }
+    }
+
     [RelayCommand]
     private async Task ToggleLiveUpdate()
     {
@@ -257,10 +317,11 @@ public partial class MarketMonitorViewModel : ViewModelBase
     {
         IsSkinsEnabled = !IsSkinsEnabled;
         Console.WriteLine($"🔫 CS:GO Skins panel: {(IsSkinsEnabled ? "Abierto" : "Cerrado")}");
+        _ = LoadMarkets();
     }
     
     [RelayCommand]
-    private void OpenFullscreen(MarketData market)
+    private void OpenFullscreen(MarketDataViewModel market)
     {
         SelectedMarket = market;
         IsFullscreenMode = true;
@@ -272,24 +333,6 @@ public partial class MarketMonitorViewModel : ViewModelBase
     {
         IsFullscreenMode = false;
         SelectedMarket = null;
-    }
-    
-    private string GetDomain(string symbol)
-    {
-        return symbol.ToUpper() switch
-        {
-            "AAPL" => "apple",
-            "MSFT" => "microsoft",
-            "GOOGL" or "GOOG" => "google",
-            "AMZN" => "amazon",
-            "META" => "meta",
-            "TSLA" => "tesla",
-            "NVDA" => "nvidia",
-            "BRK-B" => "berkshirehathaway",
-            "V" => "visa",
-            "JPM" => "jpmorganchase",
-            _ => symbol.ToLower()
-        };
     }
     
     public void Cleanup()

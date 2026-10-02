@@ -1,0 +1,77 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="using:HowsMyMoney.ViewModels"
+                    xmlns:conv="using:Avalonia.Data.Converters">
+
+    <!--
+    Fila compartida de los paneles de Monitoreo (cripto/acciones/skins). Antes era
+    el mismo bloque pegado dentro de cada panel; ahora se comparte y además arregla
+    dos cosas que tenía el original:
+    - El ícono bindeaba la URL (string) directo a Image.Source, sin pasar por el
+      caché; cuando lo arreglamos para que pasara por UrlToBitmapConverter (que
+      descarga de forma SÍNCRONA) la app se congelaba al abrir Monitoreo, porque
+      bloqueaba el hilo de UI una vez por cada fila (10-30 de golpe). Ahora cada
+      fila es un MarketDataViewModel que resuelve su imagen en BACKGROUND (mismo
+      patrón que InvestmentViewModel) y acá solo bindeamos el Bitmap ya resuelto.
+    - El % de cambio estaba siempre en verde fijo, sin importar el signo.
+    Clickear la fila abre el modo pantalla completa de ese mercado (OpenFullscreenCommand),
+    que antes estaba implementado en el ViewModel pero no tenía ningún botón que lo llamara.
+    -->
+    <vm:ProfitLossColorConverter x:Key="ProfitLossColorConverter"/>
+
+    <DataTemplate x:Key="MarketRowTemplate" x:DataType="vm:MarketDataViewModel">
+        <Button Command="{Binding $parent[UserControl].((vm:MarketMonitorViewModel)DataContext).OpenFullscreenCommand}"
+               CommandParameter="{Binding}"
+               Background="#252529"
+               BorderThickness="0"
+               CornerRadius="12"
+               Padding="14"
+               Margin="0,0,0,8"
+               HorizontalAlignment="Stretch"
+               HorizontalContentAlignment="Stretch"
+               Cursor="Hand">
+            <Button.Styles>
+                <Style Selector="Button:pointerover">
+                    <Setter Property="Background" Value="#2D2D30"/>
+                </Style>
+            </Button.Styles>
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Grid.Column="0"
+                       Width="42" Height="42"
+                       CornerRadius="21"
+                       Background="#1E1E1E"
+                       Margin="0,0,12,0">
+                    <Image Source="{Binding ImageBitmap}"
+                          Width="28" Height="28"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}"
+                              FontSize="14"
+                              FontWeight="SemiBold"
+                              Foreground="White"
+                              TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Symbol}"
+                              FontSize="11"
+                              Foreground="#8E8E93"/>
+                    <TextBlock Text="{Binding MarketCapDisplay, StringFormat='Cap {0}'}"
+                              FontSize="10"
+                              Foreground="#6B7280"
+                              IsVisible="{Binding MarketCapDisplay, Converter={x:Static conv:ObjectConverters.IsNotNull}}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"
+                              FontSize="15"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              HorizontalAlignment="Right"/>
+                    <TextBlock Text="{Binding ChangePercent24h, StringFormat='{}{0:+0.00;-0.00}%'}"
+                              FontSize="12"
+                              Foreground="{Binding ChangePercent24h, Converter={StaticResource ProfitLossColorConverter}}"
+                              HorizontalAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </Button>
+    </DataTemplate>
+</ResourceDictionary>

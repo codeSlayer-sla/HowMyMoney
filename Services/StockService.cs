@@ -72,7 +72,7 @@ public class StockService : IStockService
                                     Symbol = symbol ?? "",
                                     Name = name ?? symbol ?? "",
                                     CurrentPrice = 0, // Se llenará después en paralelo
-                                    ImageUrl = $"https://logo.clearbit.com/{GetDomainFromSymbol(symbol ?? "")}.com",
+                                    ImageUrl = StockLogoHelper.GetLogoUrl(symbol ?? ""),
                                     AssetType = AssetType.Accion
                                 });
                             }
@@ -160,7 +160,64 @@ public class StockService : IStockService
             return null;
         }
     }
-    
+
+    /// <summary>
+    /// Igual que GetStockPriceAsync pero además calcula el % de cambio contra el
+    /// cierre anterior ("chartPreviousClose"), que Yahoo ya incluye en la misma
+    /// respuesta — no hace falta un endpoint nuevo.
+    /// </summary>
+    public async Task<StockQuote?> GetStockQuoteAsync(string symbol)
+    {
+        try
+        {
+            var url = $"{_baseUrl}{symbol}?interval=1d&range=1d";
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Error obteniendo cotización de {symbol}: {response.StatusCode}");
+                return null;
+            }
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+
+            using var document = JsonDocument.Parse(jsonString);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("chart", out var chart) &&
+                chart.TryGetProperty("result", out var result) &&
+                result.GetArrayLength() > 0)
+            {
+                var meta = result[0].GetProperty("meta");
+
+                if (!meta.TryGetProperty("regularMarketPrice", out var priceElement))
+                {
+                    return null;
+                }
+
+                var price = priceElement.GetDecimal();
+
+                if (meta.TryGetProperty("chartPreviousClose", out var prevCloseElement) &&
+                    prevCloseElement.GetDecimal() is var previousClose && previousClose > 0)
+                {
+                    var change = price - previousClose;
+                    var changePercent = change / previousClose * 100;
+                    return new StockQuote { Price = price, Change = change, ChangePercent = changePercent };
+                }
+
+                // Sin cierre anterior disponible: devolvemos solo el precio
+                return new StockQuote { Price = price, Change = 0, ChangePercent = 0 };
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error obteniendo cotización de {symbol}: {ex.Message}");
+            return null;
+        }
+    }
+
     /// <summary>
     /// Obtiene información completa de una acción (nombre, precio, etc.)
     /// </summary>
@@ -184,55 +241,4 @@ public class StockService : IStockService
         }
     }
     
-    /// <summary>
-    /// Obtiene el dominio web de una empresa basado en su símbolo
-    /// Para usar con el servicio de logos de Clearbit
-    /// </summary>
-    private string GetDomainFromSymbol(string symbol)
-    {
-        return symbol.ToUpper() switch
-        {
-            // Tech
-            "AAPL" => "apple",
-            "MSFT" => "microsoft",
-            "GOOGL" or "GOOG" => "google",
-            "AMZN" => "amazon",
-            "META" or "FB" => "meta",
-            "TSLA" => "tesla",
-            "NVDA" => "nvidia",
-            "NFLX" => "netflix",
-            "AMD" => "amd",
-            "INTC" => "intel",
-            
-            // ETFs - Fondos más populares
-            "SPY" => "spdr",
-            "QQQ" => "invesco",
-            "VOO" => "vanguard",
-            "VTI" => "vanguard",
-            "IWM" => "ishares",
-            "DIA" => "spdr",
-            "VEA" => "vanguard",
-            "VWO" => "vanguard",
-            "AGG" => "ishares",
-            "BND" => "vanguard",
-            
-            // Finance
-            "JPM" => "jpmorganchase",
-            "BAC" => "bankofamerica",
-            "WFC" => "wellsfargo",
-            "GS" => "goldmansachs",
-            "V" => "visa",
-            "MA" => "mastercard",
-            
-            // Consumer
-            "KO" => "coca-cola",
-            "PEP" => "pepsi",
-            "WMT" => "walmart",
-            "DIS" => "disney",
-            "NKE" => "nike",
-            "MCD" => "mcdonalds",
-            
-            _ => symbol.ToLower()
-        };
-    }
 }

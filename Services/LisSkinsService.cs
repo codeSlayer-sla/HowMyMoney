@@ -111,6 +111,25 @@ public class LisSkinsService : ILisSkinsService
         }
     }
 
+    public async Task<List<SkinItem>> GetTopSkinsAsync(int count = 10)
+    {
+        try
+        {
+            var priceList = await GetPriceListAsync();
+
+            return priceList
+                .OrderByDescending(i => i.Price)
+                .Take(count)
+                .Select(ToSkinItem)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"✗ ERROR obteniendo top skins de LIS-Skins: {ex.Message}");
+            return new List<SkinItem>();
+        }
+    }
+
     /// <summary>
     /// Descarga (o reutiliza de caché) el price list completo de CS:GO/CS2.
     /// </summary>
@@ -154,7 +173,8 @@ public class LisSkinsService : ILisSkinsService
         SuggestedPrice = entry.Price,
         AppId = CSGO_APP_ID,
         GameName = "CS:GO",
-        ImageUrl = null
+        ImageUrl = null,
+        ListedCount = entry.Count
     };
 
     /// <summary>
@@ -311,4 +331,7 @@ public class SkinItem
     /// URL de la imagen del item (no disponible en el price list de LIS-Skins).
     /// </summary>
     public string? ImageUrl { get; set; }
+
+    /// <summary>Cantidad de unidades listadas en LIS-Skins (campo "count" del price list).</summary>
+    public int ListedCount { get; set; }
 }

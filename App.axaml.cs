@@ -53,7 +53,8 @@ public partial class App : Application
         var dashboardViewModel = new DashboardViewModel(investmentService, csvExportService);
         var addInvestmentViewModel = new AddInvestmentViewModel(
             investmentService, coinGeckoService, lisSkinsService, stockService);
-        var marketMonitorViewModel = new MarketMonitorViewModel(coinGeckoService, stockService);
+        var marketMonitorViewModel = new MarketMonitorViewModel(
+            coinGeckoService, stockService, lisSkinsService, steamIconService, imageCacheService);
 
         return new MainWindowViewModel(dashboardViewModel, addInvestmentViewModel, marketMonitorViewModel);
     }

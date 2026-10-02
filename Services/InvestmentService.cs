@@ -270,8 +270,7 @@ public class InvestmentService : IInvestmentService
         
         if (needsImageDownload)
         {
-            var domain = GetDomainFromSymbol(investment.Symbol);
-            var imageUrl = $"https://logo.clearbit.com/{domain}.com";
+            var imageUrl = StockLogoHelper.GetLogoUrl(investment.Symbol);
             
             Console.WriteLine($"📥 Descargando logo de acción: {imageUrl}");
             
@@ -285,8 +284,8 @@ public class InvestmentService : IInvestmentService
             }
             else
             {
-                // Si falla Clearbit, intentar con un logo genérico
-                Console.WriteLine($"⚠ No se pudo descargar logo de {domain}, usando icono genérico");
+                // Si falla la descarga del logo, usar un placeholder genérico
+                Console.WriteLine($"⚠ No se pudo descargar logo para {investment.Symbol}, usando ícono genérico");
                 investment.ImageUrl = $"placeholder://stock/{investment.Symbol}";
             }
         }
@@ -311,57 +310,6 @@ public class InvestmentService : IInvestmentService
         return imageUrl.StartsWith("placeholder://", StringComparison.OrdinalIgnoreCase)
                || imageUrl.Contains("via.placeholder.com", StringComparison.OrdinalIgnoreCase)
                || imageUrl.Contains("placeholder.com", StringComparison.OrdinalIgnoreCase);
-    }
-    
-    /// <summary>
-    /// Obtiene el dominio web de una empresa basado en su símbolo
-    /// </summary>
-    private string GetDomainFromSymbol(string symbol)
-    {
-        return symbol.ToUpper() switch
-        {
-            // Tech
-            "AAPL" => "apple",
-            "MSFT" => "microsoft",
-            "GOOGL" or "GOOG" => "google",
-            "AMZN" => "amazon",
-            "META" or "FB" => "meta",
-            "TSLA" => "tesla",
-            "NVDA" => "nvidia",
-            "NFLX" => "netflix",
-            "AMD" => "amd",
-            "INTC" => "intel",
-            
-            // ETFs - Fondos más populares
-            "SPY" => "spdr",
-            "QQQ" => "invesco",
-            "VOO" => "vanguard",
-            "VTI" => "vanguard",
-            "IWM" => "ishares",
-            "DIA" => "spdr",
-            "VEA" => "vanguard",
-            "VWO" => "vanguard",
-            "AGG" => "ishares",
-            "BND" => "vanguard",
-            
-            // Finance
-            "JPM" => "jpmorganchase",
-            "BAC" => "bankofamerica",
-            "WFC" => "wellsfargo",
-            "GS" => "goldmansachs",
-            "V" => "visa",
-            "MA" => "mastercard",
-            
-            // Consumer
-            "KO" => "coca-cola",
-            "PEP" => "pepsi",
-            "WMT" => "walmart",
-            "DIS" => "disney",
-            "NKE" => "nike",
-            "MCD" => "mcdonalds",
-            
-            _ => symbol.ToLower()
-        };
     }
     
     /// <summary>

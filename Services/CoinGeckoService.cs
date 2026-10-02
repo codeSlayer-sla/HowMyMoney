@@ -168,7 +168,8 @@ public class CoinGeckoService : ICoinGeckoService
                     ImageUrl = coin.Image,
                     CurrentPrice = coin.CurrentPrice,
                     PriceChange24h = coin.PriceChange24h,
-                    PriceChangePercentage24h = coin.PriceChangePercentage24h
+                    PriceChangePercentage24h = coin.PriceChangePercentage24h,
+                    MarketCap = coin.MarketCap
                 }).ToList();
                 
                 // Guardar en caché
@@ -263,6 +264,7 @@ public class CryptoFullInfo
     public decimal CurrentPrice { get; set; }
     public decimal PriceChange24h { get; set; }
     public decimal PriceChangePercentage24h { get; set; }
+    public decimal? MarketCap { get; set; }
 }
 
 // Clase para deserializar el endpoint /coins/markets
@@ -288,6 +290,9 @@ public class CoinMarketInfo
     
     [JsonPropertyName("price_change_percentage_24h")]
     public decimal PriceChangePercentage24h { get; set; }
+
+    [JsonPropertyName("market_cap")]
+    public decimal? MarketCap { get; set; }
 }
 
 // Clases para deserializar respuesta completa de CoinGecko
